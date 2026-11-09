@@ -1,26 +1,264 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Gap Castle Community design system.
+ *
+ * Official Gap Castle Brand Color System:
+ *   Primary: Brand Blue ramp `primary-*` (600 is #144A96 exactly) -> trust, reliability
+ *   Secondary / Accent: Brand Yellow ramp `brand-yellow-*` (500 is #E1D050 exactly) -> warmth, generosity
+ * Yellow always carries dark text (highlight-foreground) for contrast.
+ * Components use semantic tokens only — never hardcode hex utilities.
+ */
 
 @theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* --- brand blue ramp (primary): 600 is #144A96 exactly --- */
+  --color-primary-50: #e9edfe;
+  --color-primary-100: #d6dffd;
+  --color-primary-200: #a7bdfb;
+  --color-primary-300: #779ef9;
+  --color-primary-400: #3380f7;
+  --color-primary-500: #1f65c9;
+  --color-primary-600: #144a96;
+  --color-primary-700: #0d3773;
+  --color-primary-800: #072754;
+  --color-primary-900: #031736;
+  --color-primary-950: #010d25;
+
+  /* --- brand yellow ramp (secondary / accent): 500 is #E1D050 exactly --- */
+  --color-brand-yellow-50: #fefae4;
+  --color-brand-yellow-100: #fef7d5;
+  --color-brand-yellow-200: #fced88;
+  --color-brand-yellow-300: #f7e559;
+  --color-brand-yellow-400: #ebd954;
+  --color-brand-yellow-500: #e1d050;
+  --color-brand-yellow-600: #afa23d;
+  --color-brand-yellow-700: #82782b;
+  --color-brand-yellow-800: #564e19;
+  --color-brand-yellow-900: #2f2a0a;
+  --color-brand-yellow-950: #1b1804;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-highlight-soft-foreground: var(--highlight-soft-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-cream: var(--cream);
+  --color-cream-foreground: var(--cream-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: 0 1px 2px 0 color-mix(in oklab, var(--foreground) 5%, transparent), 0 2px 8px -2px color-mix(in oklab, var(--foreground) 6%, transparent);
+  --shadow-lift: 0 18px 40px -16px color-mix(in oklab, var(--color-primary-700) 35%, transparent);
+  --shadow-float: 0 -6px 24px -12px color-mix(in oklab, var(--foreground) 22%, transparent);
+  --animate-fade-up: fade-up 0.5s ease-out both;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --radius: 0.75rem;
+
+  /* Neutrals are tinted with the brand blue so greys never look muddy next to it. */
+  --background: #f4f6fb;
+  --foreground: #031736;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #031736;
+  --popover: #ffffff;
+  --popover-foreground: #031736;
+  --muted: #eceff7;
+  --muted-foreground: #4a5874;
+  --border: #dde3ef;
+  --input: #cfd7e6;
+
+  /* Primary: brand blue */
+  --primary: #144a96;
+  --primary-foreground: #ffffff;
+  --ring: #1f65c9;
+
+  /* Secondary: soft blue for chips, quiet buttons and selected states */
+  --secondary: #e9edfe;
+  --secondary-foreground: #0d3773;
+  --accent: #e9edfe;
+  --accent-foreground: #0d3773;
+
+  /* Highlight: brand yellow for the "FREE" badge, give CTA and promos (always dark text) */
+  --highlight: #e1d050;
+  --highlight-foreground: #1b1804;
+  --highlight-soft: #fef7d5;
+  --highlight-soft-foreground: #564e19;
+  --cream: #fefae4;
+  --cream-foreground: #2f2a0a;
+
+  /* Deep brand surfaces (top bar, footer, hero) */
+  --ink: #031736;
+  --ink-foreground: #e9edfe;
+
+  /* Status */
+  --success: #187a4b;
+  --success-soft: #e3f4ea;
+  --destructive: #c2413b;
+  --destructive-foreground: #ffffff;
+
+  --chart-1: #144a96;
+  --chart-2: #e1d050;
+  --chart-3: #3380f7;
+  --chart-4: #82782b;
+  --chart-5: #072754;
+}
+
+.dark {
+  --background: #010d25;
+  --foreground: #e9edfe;
+  --surface: #031736;
+  --card: #031736;
+  --card-foreground: #e9edfe;
+  --popover: #031736;
+  --popover-foreground: #e9edfe;
+  --muted: #072754;
+  --muted-foreground: #a7bdfb;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.16);
+  --primary: #3380f7;
+  --primary-foreground: #010d25;
+  --ring: #779ef9;
+  --secondary: #072754;
+  --secondary-foreground: #d6dffd;
+  --accent: #072754;
+  --accent-foreground: #d6dffd;
+  --highlight: #ebd954;
+  --highlight-foreground: #1b1804;
+  --highlight-soft: #2f2a0a;
+  --highlight-soft-foreground: #f7e559;
+  --cream: #031736;
+  --cream-foreground: #e9edfe;
+  --ink: #000818;
+  --ink-foreground: #d6dffd;
+  --success: #5fd39a;
+  --success-soft: #0c2e20;
+  --destructive: #e0716b;
+  --destructive-foreground: #010d25;
+  --chart-1: #3380f7;
+  --chart-2: #ebd954;
+  --chart-3: #a7bdfb;
+  --chart-4: #f7e559;
+  --chart-5: #1f65c9;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--highlight) 45%, transparent);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+
+  @media (width >=40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >=64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility text-balance-tight {
+  text-wrap: balance;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
