@@ -246,7 +246,9 @@ export function SiteChrome({ children, categoryNav }: { children: ReactNode; cat
         </SheetContent>
       </Sheet>
 
-      <VerifyEmailBanner />
+      <Suspense fallback={null}>
+        <VerifyEmailBanner />
+      </Suspense>
       <main id="main" className="flex-1">{children}</main>
 
       <Suspense fallback={<SiteFooter />}>
