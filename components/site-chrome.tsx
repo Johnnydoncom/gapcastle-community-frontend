@@ -48,6 +48,7 @@ import { useSession, useSignOut } from "@/hooks/use-session";
 import type { Session } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import logoMark from "@/public/brand/logo-mark.png";
+import { BrandWordmark } from "@/components/brand-wordmark";
 
 /**
  * Marketplace site chrome. Desktop: slim brand bar, sticky header with search and
@@ -95,12 +96,9 @@ function isActive(pathname: string, href: string) {
 
 function Logo({ inverted = false, compact = false }: { inverted?: boolean; compact?: boolean }) {
   return (
-    <Link href="/" className={cn("inline-flex shrink-0 items-center gap-2 text-lg font-extrabold tracking-tight", inverted ? "text-white" : "text-primary-700")} aria-label="Gap Castle Community home">
+    <Link href="/" className="inline-flex shrink-0 items-center gap-2.5" aria-label="Gap Castle Community home">
       <Image src={logoMark} alt="" priority className="h-8 w-auto shrink-0" sizes="48px" />
-      <span className={cn("leading-none", compact && "max-[359px]:hidden")}>
-        Gap Castle
-        <span className={cn("block text-[10px] font-bold uppercase tracking-[0.22em]", inverted ? "text-brand-yellow-300" : "text-muted-foreground")}>Community</span>
-      </span>
+      <BrandWordmark inverted={inverted} className={cn(compact && "max-[359px]:hidden")} />
     </Link>
   );
 }

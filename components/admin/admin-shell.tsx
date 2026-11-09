@@ -38,6 +38,7 @@ import { useSession, useSignOut } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import logoMark from "@/public/brand/logo-mark.png";
+import { BrandWordmark } from "@/components/brand-wordmark";
 
 type Counts = { pending_moderation: number; open_reports: number };
 
@@ -150,12 +151,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
 function SidebarNav({ pathname, counts, onNavigate }: { pathname: string; counts?: Counts; onNavigate: () => void }) {
   return (
     <>
-      <Link href="/admin" onClick={onNavigate} className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
+      <Link href="/admin" onClick={onNavigate} aria-label="Gap Castle admin console" className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
         <Image src={logoMark} alt="" className="h-8 w-auto shrink-0" sizes="48px" />
-        <span className="leading-tight">
-          <span className="block font-extrabold text-white">Gap Castle</span>
-          <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-brand-yellow-300">Admin console</span>
-        </span>
+        <BrandWordmark inverted tagline="Admin console" />
       </Link>
       <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-4">
         {NAV.map((section) => (
