@@ -45,11 +45,14 @@ export function ImpactStats({ stats }: { stats: CommunityStats }) {
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           {STATS.map(({ key, label, icon: Icon }) => (
             <div key={key} className="rounded-2xl bg-muted/60 p-4">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-card text-primary shadow-soft"><Icon className="size-[18px]" /></span>
-              <p className="mt-3 text-2xl font-extrabold tabular-nums text-primary-700 sm:text-3xl">
-                <CountUp value={stats[key]} run={visible} />
-              </p>
-              <p className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</p>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-4">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-card text-primary shadow-soft"><Icon className="size-[18px]" /></span>
+                <p className="text-2xl font-extrabold tabular-nums text-primary-700 sm:text-3xl">
+                  <CountUp value={stats[key]} run={visible} />
+                </p>
+              </div>
+
+              <p className="mt-2 sm:mt-4 text-xs font-medium text-muted-foreground sm:text-sm">{label}</p>
             </div>
           ))}
         </div>

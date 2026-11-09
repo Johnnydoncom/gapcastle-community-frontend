@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 export function HomePage() {
   return (
     <div className="pb-6">
-      <section className="container-page pt-3 sm:pt-6" aria-label="Welcome">
+      <section className="container-page px-0 sm:px-[1rem] pt-0 sm:pt-3 sm:pt-6" aria-label="Welcome">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
           {/* <aside className="hidden lg:block">
             <Suspense fallback={<div className="h-full min-h-80 animate-pulse rounded-2xl bg-card" />}>
@@ -77,9 +77,9 @@ export function HomePage() {
 
       <Rail title="Most requested" eyebrow="Popular in the community" href="/explore?sort=most_requested" query={{ sort: "most_requested", available_only: true, per_page: 10 }} />
 
-      <Suspense fallback={null}>
+      {/* <Suspense fallback={null}>
         <PickupHubsSection />
-      </Suspense>
+      </Suspense> */}
 
       <Suspense fallback={<ImpactStatsSkeleton />}>
         <ImpactStatsSection />
@@ -104,7 +104,7 @@ async function HeroWithPhotos() {
 
 function HeroBanner({ photos }: { photos: Listing[] }) {
   return (
-    <div className="relative isolate overflow-hidden rounded-2xl bg-primary-700 text-white sm:rounded-3xl">
+    <div className="relative isolate overflow-hidden rounded-none bg-primary-700 text-white sm:rounded-3xl">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(120%_120%_at_0%_0%,var(--color-primary-500)_0%,var(--color-primary-700)_45%,var(--color-primary-900)_100%)]" />
       <div className="absolute -right-24 -top-24 -z-10 size-72 rounded-full bg-brand-yellow-400/20 blur-3xl" />
       <div className="absolute -bottom-24 left-1/3 -z-10 size-64 rounded-full bg-primary-400/30 blur-3xl" />
