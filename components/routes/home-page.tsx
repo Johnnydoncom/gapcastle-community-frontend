@@ -109,7 +109,7 @@ function HeroBanner({ photos }: { photos: Listing[] }) {
       <div className="absolute -right-24 -top-24 -z-10 size-72 rounded-full bg-brand-yellow-400/20 blur-3xl" />
       <div className="absolute -bottom-24 left-1/3 -z-10 size-64 rounded-full bg-primary-400/30 blur-3xl" />
 
-      <div className="grid items-center gap-6 p-5 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] lg:p-9">
+      <div className="grid items-center gap-6 py-8 p-5 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] lg:p-9">
         <div className="max-w-xl animate-fade-up">
           <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-yellow-200 ring-1 ring-white/15 sm:text-sm">
             <HeartHandshake className="size-4" /> Nigeria&apos;s free community marketplace
