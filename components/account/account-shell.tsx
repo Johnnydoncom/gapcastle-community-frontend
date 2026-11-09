@@ -6,11 +6,12 @@ import { HandHeart } from "lucide-react";
 import { ACCOUNT_LINKS } from "@/components/site-chrome";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { VerifyEmailPanel } from "@/components/verify-email-panel";
 import { useSession } from "@/hooks/use-session";
 import { profilePath } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-/** Layout for every /account page: sign-in gate plus sidebar (desktop) or tabs (mobile). */
+/** Layout for every /account page: sign-in and email-verification gates plus sidebar (desktop) or tabs (mobile). */
 export function AccountShell({ children }: { children: React.ReactNode }) {
   const { user, session, isLoading } = useSession();
   const pathname = usePathname();
@@ -26,6 +27,14 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
         <h1 className="mt-4 text-3xl font-bold">Your community space</h1>
         <p className="mt-2 text-muted-foreground">Sign in to manage the things you give and find.</p>
         <Button asChild className="mt-6"><Link href={`/auth?next=${encodeURIComponent(pathname)}`}>Sign in</Link></Button>
+      </div>
+    );
+  }
+
+  if (!user.email_verified) {
+    return (
+      <div className="container-page flex justify-center py-10">
+        <VerifyEmailPanel />
       </div>
     );
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, ImagePlus, Loader2, ShieldCheck, X } from "lucide-react";
 import { useRef, useState } from "react";
@@ -146,7 +147,8 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
     <>
       {!user?.email_verified && (
         <p className="mb-6 rounded-xl border border-border bg-accent/40 px-4 py-3 text-sm">
-          Please verify your email before publishing — use the link we sent to <strong>{user?.email}</strong>.
+          Please verify <strong>{user?.email}</strong> before publishing.{" "}
+          <Link href="/verify-email?next=%2Fgive" className="font-semibold text-primary hover:underline">Verify with a code</Link>
         </p>
       )}
       <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-8">

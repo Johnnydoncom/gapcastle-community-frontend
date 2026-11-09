@@ -42,8 +42,16 @@ export function AuthPage() {
       queryClient.clear();
       queryClient.setQueryData(SESSION_KEY, sessionFromAccount(user));
       void queryClient.invalidateQueries({ queryKey: SESSION_KEY });
-      toast.success(mode === "signup" ? "Welcome to the community! Check your email to verify your account." : `Welcome back, ${user.name.split(" ")[0]}!`);
-      router.push(next);
+      if (mode === "signup") {
+        toast.success("Welcome to the community! We've emailed you a 6-digit code to verify your account.");
+        router.push(`/verify-email?sent=1&next=${encodeURIComponent(next)}`);
+      } else if (!user.email_verified) {
+        toast.info(`Welcome back, ${user.name.split(" ")[0]}! Please verify your email to continue.`);
+        router.push(`/verify-email?next=${encodeURIComponent(next)}`);
+      } else {
+        toast.success(`Welcome back, ${user.name.split(" ")[0]}!`);
+        router.push(next);
+      }
     } catch (err) {
       const message = err instanceof ApiError
         ? (err.status === 429 ? "Too many attempts. Please wait a minute and try again." : (Object.values(err.errors)[0]?.[0] ?? err.message))

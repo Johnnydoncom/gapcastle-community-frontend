@@ -1,13 +1,6 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import { VerifiedStatus } from "@/components/verified-status";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Email verification", robots: { index: false, follow: false } };
-
+/** Old verification-link landing page. Verification now uses an emailed code. */
 export default function Page() {
-  return (
-    <Suspense>
-      <VerifiedStatus />
-    </Suspense>
-  );
+  redirect("/verify-email");
 }

@@ -58,8 +58,8 @@ export async function RequestCheckoutPage({ slug }: { slug: string }) {
 
   if (!viewer.data.email_verified) {
     return (
-      <Blocked icon={MailCheck} title="Please verify your email first" text="For everyone's safety, only verified members can request items. Check your inbox for the verification link, or resend it from your account." itemPath={itemPath}>
-        <Button asChild><Link href="/account/settings">Account settings</Link></Button>
+      <Blocked icon={MailCheck} title="Please verify your email first" text="For everyone's safety, only verified members can request items. Confirm your email with the 6-digit code we send you — it only takes a moment." itemPath={itemPath}>
+        <Button asChild><Link href={`/verify-email?next=${encodeURIComponent(`${itemPath}/request`)}`}>Verify my email</Link></Button>
       </Blocked>
     );
   }
