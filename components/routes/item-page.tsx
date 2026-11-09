@@ -194,7 +194,7 @@ export async function ItemPage({ slug }: { slug: string }) {
       </div>
 
       {related.length > 0 && (
-        <section className="mt-10 mb-10 lg:mb-0" aria-labelledby="related-title">
+        <section className="mt-10 pb-10 lg:pb-0" aria-labelledby="related-title">
           <div className="flex items-end justify-between gap-4">
             <h2 id="related-title" className="text-xl font-extrabold">More in {listing.category?.name ?? "this category"}</h2>
             {listing.category && (
