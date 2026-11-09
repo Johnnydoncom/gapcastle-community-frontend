@@ -376,14 +376,14 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
           ))}
         </div>
       </div>
-      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
-        <div>
+      <div className="container-page grid grid-cols-2 gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        <div className="col-span-2 lg:col-span-1">
           <Logo inverted />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-foreground/75">
             A free community marketplace where good things find a second home. Every item is free — always.
           </p>
           <p className="mt-3 text-sm font-semibold text-brand-yellow-300">Give freely. Receive gratefully. Build community.</p>
-          <div className="mt-5">
+          <div className="mt-5 inline-flex">
             <InstallAppButton variant="highlight" />
           </div>
           <SocialLinks />
@@ -410,7 +410,7 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
       </div>
       <div className="border-t border-white/10">
         <p className="container-page py-5 text-xs text-ink-foreground/60">
-          © <CurrentYear /> Gap Castle Limited · Serving Nigeria only · Items on Gap Castle Community are always free. Waybill or delivery costs, if any, are separate and agreed openly.
+          © <CurrentYear /> Gap Castle Limited · Serving Nigeria only · Waybill or delivery costs, if any, are separate and agreed openly.
         </p>
       </div>
     </footer>
@@ -484,7 +484,7 @@ function SocialLinks() {
 
   const pill = "rounded-full border border-white/15 px-3 py-1.5 text-ink-foreground/80 transition-colors hover:border-white/40 hover:text-white";
   return (
-    <div className="mt-5 flex flex-wrap gap-2 text-sm">
+    <div className="mt-5 inline-flex flex-wrap gap-2 text-sm">
       <a href="mailto:info@gapcastle.com" className={pill}>info@gapcastle.com</a>
       {links.map((link) => (
         <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className={pill}>{link.label}</a>
