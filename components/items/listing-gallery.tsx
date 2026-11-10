@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand, Package } from "lucide-react";
@@ -73,12 +74,11 @@ export function ListingGallery({
               aria-label={`Show photo ${index + 1}`}
               aria-current={index === active}
               className={cn(
-                "aspect-square shrink-0 overflow-hidden rounded-xl bg-muted ring-2 ring-offset-2 ring-offset-background transition",
+                "relative aspect-square shrink-0 overflow-hidden rounded-xl bg-muted ring-2 ring-offset-2 ring-offset-background transition",
                 index === active ? "ring-primary" : "ring-transparent opacity-70 hover:opacity-100",
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- listing thumbnail */}
-              <img src={photoUrl(image.url) ?? ""} alt="" className="size-full object-cover" loading="lazy" />
+              {image.url && <Image src={image.url} alt="" fill sizes="76px" className="object-cover" />}
             </button>
           ))}
         </div>
@@ -102,15 +102,15 @@ export function ListingGallery({
               className="relative size-full shrink-0 snap-center cursor-zoom-in"
               aria-label={`Open photo ${index + 1} of ${images.length} full screen`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- listing photos are served by the API host */}
-              <img
-                src={photoUrl(image.url) ?? ""}
+              {image.url && <Image
+                src={image.url}
                 alt={`${title} — photo ${index + 1}`}
-                className="size-full object-cover"
-                loading={index === 0 ? "eager" : "lazy"}
-                fetchPriority={index === 0 ? "high" : undefined}
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover"
+                preload={index === 0}
                 draggable={false}
-              />
+              />}
             </button>
           ))}
         </div>

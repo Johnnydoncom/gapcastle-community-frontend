@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -73,9 +74,8 @@ export function MyRequestsPage() {
             return (
               <li key={request.id} className="rounded-2xl border border-border bg-card p-4 shadow-soft">
                 <div className="flex gap-4">
-                  <Link href={listing ? listingPath(listing.slug) : "/explore"} className="size-20 shrink-0 overflow-hidden rounded-xl bg-muted">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- listing photo */}
-                    {listing?.images?.[0] ? <img src={listing.images[0].url} alt="" className="size-full object-cover" /> : <div className="flex size-full items-center justify-center text-2xl">📦</div>}
+                  <Link href={listing ? listingPath(listing.slug) : "/explore"} className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted">
+                    {listing?.images?.[0] ? <Image src={listing.images[0].url} alt="" fill sizes="80px" className="object-cover" /> : <div className="flex size-full items-center justify-center text-2xl">📦</div>}
                   </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

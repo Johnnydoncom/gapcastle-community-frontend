@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import Link from "next/link";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
@@ -7,7 +8,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/form-fields";
 import { ApiError, api } from "@/lib/api";
-import { photoUrl } from "@/lib/gapcastle";
 import type { ItemRequest, NgState } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -343,8 +343,7 @@ function ItemSummary({ listing, className, plain = false }: { listing: Summary; 
     <Link href={listing.path} className={cn("flex items-center gap-3", !plain && "rounded-3xl border border-border bg-card p-3", className)}>
       <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-muted sm:size-20">
         {listing.image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- listing photo from the API host
-          <img src={photoUrl(listing.image)} alt="" className="size-full object-cover" />
+          <Image src={listing.image} alt="" fill sizes="80px" className="object-cover" />
         ) : (
           <Package className="absolute inset-0 m-auto size-7 text-primary-300" />
         )}

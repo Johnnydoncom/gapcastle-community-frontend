@@ -1,20 +1,23 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Compass,
   MapPin,
-  Search,
   SlidersHorizontal,
+  Sparkles,
+  Truck,
   X,
 } from "lucide-react";
 import { ItemCard } from "@/components/items/item-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/form-fields";
 import { exploreHref, EXPLORE_PER_PAGE, type ExploreFilters } from "@/lib/explore";
 import {
   CONDITION_LABELS,
+  categoryIcon,
   toListingRow,
   type ListingRow,
 } from "@/lib/gapcastle";
@@ -157,7 +160,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
   );
 
   return (
-    <div className="container-page py-8">
+    <div className="container-page py-4 sm:py-8">
       {result && (
         <script
           type="application/ld+json"
@@ -165,37 +168,51 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
         />
       )}
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          {fixedCategory && (
-            <Link href="/categories" className="text-sm font-semibold text-primary hover:underline">
-              All categories
-            </Link>
-          )}
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          <p className="mt-1 text-muted-foreground">{description}</p>
-        </div>
-        <Button asChild variant="highlight"><Link href="/give">Give an item</Link></Button>
-      </div>
+      <header className="relative isolate overflow-hidden rounded-3xl border border-border bg-card px-4 pb-4 pt-4 sm:px-8 sm:pb-7 sm:pt-6">
+        <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 -z-20 size-64 rounded-full bg-accent blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-24 right-1/4 -z-20 size-48 rounded-full bg-highlight-soft blur-3xl" />
+        {fixedCategory?.image_url && (
+          <div aria-hidden className="absolute inset-y-0 right-0 -z-10 hidden w-[42%] md:block">
+            <Image src={fixedCategory.image_url} alt="" fill sizes="42vw" className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-card via-card/75 to-card/10" />
+          </div>
+        )}
 
-      <form action={basePath} method="get" role="search" className="mt-6 flex gap-3">
-        {!fixedCategory && filters.category && <input type="hidden" name="category" value={filters.category} />}
-        {filters.location && <input type="hidden" name="location" value={filters.location} />}
-        {filters.condition && <input type="hidden" name="condition" value={filters.condition} />}
-        {filters.fulfillment && <input type="hidden" name="fulfillment" value={filters.fulfillment} />}
-        {filters.sort !== "newest" && <input type="hidden" name="sort" value={filters.sort} />}
-        <Input
-          name="q"
-          type="search"
-          defaultValue={filters.q}
-          placeholder="Search by item name or keyword"
-          aria-label="Search items"
-          className="h-11 flex-1"
-        />
-        <Button type="submit" className="h-11">
-          <Search className="size-4" /> Search
-        </Button>
-      </form>
+        <nav aria-label="Breadcrumb">
+          <ol className="flex min-w-0 items-center gap-1 text-xs font-medium text-muted-foreground">
+            <li><Link href="/" className="transition hover:text-foreground">Home</Link></li>
+            <li aria-hidden><ChevronRight className="size-3" /></li>
+            {fixedCategory ? (
+              <>
+                <li><Link href="/categories" className="transition hover:text-foreground">Categories</Link></li>
+                <li aria-hidden><ChevronRight className="size-3" /></li>
+                <li aria-current="page" className="truncate text-foreground">{fixedCategory.name}</li>
+              </>
+            ) : (
+              <li aria-current="page" className="text-foreground">Explore</li>
+            )}
+          </ol>
+        </nav>
+
+        <div className="mt-4 flex items-start gap-3 sm:mt-5 sm:gap-4 md:max-w-[56%]">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-primary ring-1 ring-primary/10 sm:size-14">
+            {createElement(fixedCategory ? categoryIcon(fixedCategory.icon) : Compass, { className: "size-6 sm:size-7" })}
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-4xl">{title}</h1>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">{description}</p>
+          </div>
+        </div>
+
+        <ul className="mt-4 flex flex-wrap gap-2 text-xs font-semibold" aria-label="Good to know">
+          <li className="inline-flex items-center gap-1.5 rounded-full bg-highlight-soft px-3 py-1 text-highlight-soft-foreground">
+            <Sparkles className="size-3.5" /> Always free
+          </li>
+          <li className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1 text-muted-foreground">
+            <Truck className="size-3.5" /> Hub pickup or waybill
+          </li>
+        </ul>
+      </header>
 
       <details className="group mt-4 rounded-2xl border border-border bg-card p-4 lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between font-semibold [&::-webkit-details-marker]:hidden">
@@ -358,8 +375,7 @@ function listJsonLd(title: string, rows: ListingRow[], category?: Category) {
 export function ExploreSkeleton() {
   return (
     <div className="container-page py-8">
-      <div className="h-9 w-64 animate-pulse rounded bg-muted" />
-      <div className="mt-6 h-11 w-full animate-pulse rounded-lg bg-muted" />
+      <div className="h-40 w-full animate-pulse rounded-3xl bg-muted sm:h-48" />
       <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
         <div className="hidden h-80 animate-pulse rounded-2xl bg-muted lg:block" />
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">

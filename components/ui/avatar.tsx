@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 
@@ -25,8 +26,7 @@ function Avatar({
       )}
     >
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element -- avatars are served by the API host
-        <img src={url} alt={name ?? "Avatar"} className="size-full object-cover" loading="lazy" />
+        <Image src={url} alt={name ?? "Avatar"} fill sizes="96px" className="object-cover" />
       ) : (
         initials
       )}

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -183,8 +184,7 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
           <div className="flex flex-wrap gap-3">
             {photos.map((p) => (
               <div key={p.key} className="relative size-24 overflow-hidden rounded-xl border border-border">
-                {/* eslint-disable-next-line @next/next/no-img-element -- local preview */}
-                <img src={p.url} alt="" className="size-full object-cover" />
+                <Image src={p.url} alt="" fill unoptimized sizes="96px" className="object-cover" />
                 {!p.path && !p.error && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-foreground/45 text-[11px] font-semibold text-background">
                     <Loader2 className="size-4 animate-spin" /> {p.progress}%
@@ -251,8 +251,7 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
           </DialogHeader>
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
             <div className="relative aspect-[4/3] bg-muted">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local preview */}
-              {previewImage ? <img src={previewImage} alt="" className="size-full object-cover" /> : <div className="flex size-full items-center justify-center bg-gradient-to-br from-secondary to-accent/40 text-4xl">📦</div>}
+              {previewImage ? <Image src={previewImage} alt="" fill unoptimized sizes="(min-width: 1024px) 360px, 100vw" className="object-cover" /> : <div className="flex size-full items-center justify-center bg-gradient-to-br from-secondary to-accent/40 text-4xl">📦</div>}
               <Badge variant="free" className="absolute left-3 top-3 shadow-soft">FREE</Badge>
             </div>
             <div className="space-y-2 p-4">

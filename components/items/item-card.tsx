@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Clock, MapPin, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +6,6 @@ import { SaveButton } from "@/components/items/save-button";
 import {
   CONDITION_LABELS,
   LISTING_STATUS_LABELS,
-  photoUrl,
   timeAgo,
   type ListingRow,
 } from "@/lib/gapcastle";
@@ -41,13 +41,12 @@ export function ItemCard({
     >
       <div className="relative aspect-square overflow-hidden bg-muted">
         {image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- listing photos are served by the API host
-          <img
-            src={photoUrl(image)}
+          <Image
+            src={image}
             alt={listing.title}
-            loading="lazy"
-            decoding="async"
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary-50 to-brand-yellow-50 text-primary-300">

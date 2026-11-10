@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -12,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input, Select, Textarea } from "@/components/ui/form-fields";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
-import { CONDITION_LABELS, photoUrl, timeAgo } from "@/lib/gapcastle";
+import { CONDITION_LABELS, timeAgo } from "@/lib/gapcastle";
 import { listingPath } from "@/lib/site";
 import type { Category } from "@/lib/types";
 
@@ -118,9 +119,8 @@ export function AdminListingsPage() {
                 <div className="flex items-center gap-3">
                   <span className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-muted">
                     {listing.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- listing thumbnail from the API host
-                      <img src={photoUrl(listing.image)} alt="" className="size-full object-cover" />
-                    ) : <Package className="absolute inset-0 m-auto size-5 text-muted-foreground" />}
+                      <Image src={listing.image} alt="" fill sizes="44px" className="object-cover" />
+                    ) :<Package className="absolute inset-0 m-auto size-5 text-muted-foreground" />}
                   </span>
                   <div className="min-w-0">
                     <p className="max-w-64 truncate font-semibold">{listing.title}</p>

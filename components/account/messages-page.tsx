@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -149,8 +150,7 @@ export function MessagesPage() {
             ) : (
               <div key={message.id} className={`flex ${message.sender_id === me ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] overflow-hidden rounded-xl text-sm ${message.sender_id === me ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- chat photo from the API host */}
-                  {message.image_url && <a href={message.image_url} target="_blank" rel="noreferrer"><img src={message.image_url} alt="Shared photo" className="max-h-64 w-full object-cover" /></a>}
+                  {message.image_url && <a href={message.image_url} target="_blank" rel="noreferrer"><Image src={message.image_url} alt="Shared photo" width={640} height={480} sizes="(min-width: 640px) 420px, 85vw" className="h-auto max-h-64 w-full object-cover" /></a>}
                   <div className="px-4 py-3">
                     {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
                     <p className={`mt-1 text-[10px] ${message.sender_id === me ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{timeAgo(message.created_at)}</p>

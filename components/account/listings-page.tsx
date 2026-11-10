@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -94,9 +95,8 @@ export function MyListingsPage() {
             return (
               <article key={listing.id} className={cn("overflow-hidden rounded-2xl border bg-card shadow-soft transition-colors", isOpen ? "border-primary/40" : "border-border")}>
                 <div className="flex gap-4 p-4">
-                  <Link href={listingPath(listing.slug)} className="size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- listing photo */}
-                    {listing.images?.[0] ? <img src={listing.images[0].url} alt="" className="size-full object-cover" /> : <div className="flex size-full items-center justify-center text-2xl">📦</div>}
+                  <Link href={listingPath(listing.slug)} className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24">
+                    {listing.images?.[0] ? <Image src={listing.images[0].url} alt="" fill sizes="96px" className="object-cover" /> : <div className="flex size-full items-center justify-center text-2xl">📦</div>}
                   </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

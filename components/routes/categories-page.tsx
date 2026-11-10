@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Package } from "lucide-react";
@@ -78,8 +79,7 @@ export async function CategoriesPage() {
                 href={categoryPath(category.slug)}
                 className="group relative isolate flex h-44 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-foreground p-5 text-background shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- category artwork is configured in the API */}
-                {category.image_url && <img src={category.image_url} alt="" loading="lazy" className="absolute inset-0 -z-20 size-full object-cover transition-transform duration-500 group-hover:scale-105" />}
+                {category.image_url && <Image src={category.image_url} alt="" fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="-z-20 object-cover transition-transform duration-500 group-hover:scale-105" />}
                 <span className="absolute inset-0 -z-10 bg-gradient-to-t from-foreground/90 via-foreground/50 to-foreground/10" />
                 <span className="absolute left-4 top-4 flex size-10 items-center justify-center rounded-xl bg-background/95 text-primary"><Icon className="size-5" /></span>
                 <span className="text-lg font-bold">{category.name}</span>

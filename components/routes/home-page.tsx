@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
@@ -19,7 +20,7 @@ import { ImpactStats } from "@/components/home/impact-stats";
 import { ItemCard, ItemCardSkeleton } from "@/components/items/item-card";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { Button } from "@/components/ui/button";
-import { categoryIcon, photoUrl, toListingRow, type ListingRow } from "@/lib/gapcastle";
+import { categoryIcon, toListingRow, type ListingRow } from "@/lib/gapcastle";
 import { getAnnouncements, getCategories, getListings, getStates, getStats, type ListingQuery } from "@/lib/server/api";
 import { categoryPath, listingPath } from "@/lib/site";
 import type { Category, CommunityStats, Listing, NgState } from "@/lib/types";
@@ -149,8 +150,7 @@ function HeroBanner({ photos }: { photos: Listing[] }) {
                   index === 2 && "bottom-3 right-1 h-24 w-24 rotate-6",
                 )}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- listing photos come from the API host */}
-                <img src={photoUrl(listing.images?.[0]?.url)} alt="" className="size-full object-cover" />
+                {listing.images?.[0]?.url && <Image src={listing.images[0].url} alt="" fill sizes="144px" className="object-cover" />}
                 <span className="absolute bottom-1.5 left-1.5 rounded bg-highlight px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-highlight-foreground">FREE</span>
               </Link>
             ))}
