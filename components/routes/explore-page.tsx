@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { createElement, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Compass,
   MapPin,
   SlidersHorizontal,
   Sparkles,
@@ -17,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { exploreHref, EXPLORE_PER_PAGE, type ExploreFilters } from "@/lib/explore";
 import {
   CONDITION_LABELS,
-  categoryIcon,
   toListingRow,
   type ListingRow,
 } from "@/lib/gapcastle";
@@ -171,6 +169,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
       <header className="relative isolate overflow-hidden rounded-3xl border border-border bg-card px-4 pb-4 pt-4 sm:px-8 sm:pb-7 sm:pt-6">
         <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 -z-20 size-64 rounded-full bg-accent blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-24 right-1/4 -z-20 size-48 rounded-full bg-highlight-soft blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute right-0 top-0 -z-20 h-40 w-56 bg-[radial-gradient(var(--color-primary-300)_1px,transparent_1px)] bg-[size:14px_14px] opacity-40 [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_70%)]" />
         {fixedCategory?.image_url && (
           <div aria-hidden className="absolute inset-y-0 right-0 -z-10 hidden w-[42%] md:block">
             <Image src={fixedCategory.image_url} alt="" fill sizes="42vw" className="object-cover" />
@@ -194,17 +193,21 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
           </ol>
         </nav>
 
-        <div className="mt-4 flex items-start gap-3 sm:mt-5 sm:gap-4 md:max-w-[56%]">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-primary ring-1 ring-primary/10 sm:size-14">
-            {createElement(fixedCategory ? categoryIcon(fixedCategory.icon) : Compass, { className: "size-6 sm:size-7" })}
-          </span>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-4xl">{title}</h1>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">{description}</p>
-          </div>
+        <div className="mt-4 min-w-0 sm:mt-5 md:max-w-[56%]">
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight sm:text-4xl">{highlightFree(title)}</h1>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground sm:text-base">{description}</p>
         </div>
 
-        <ul className="mt-4 flex flex-wrap gap-2 text-xs font-semibold" aria-label="Good to know">
+        <ul className="mt-4 flex flex-wrap gap-2 text-xs font-semibold sm:mt-5" aria-label="Good to know">
+          {meta && (
+            <li className="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-primary-foreground">
+              <span aria-hidden className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-highlight opacity-75 motion-reduce:hidden" />
+                <span className="relative inline-flex size-2 rounded-full bg-highlight" />
+              </span>
+              {meta.total} item{meta.total === 1 ? "" : "s"} available
+            </li>
+          )}
           <li className="inline-flex items-center gap-1.5 rounded-full bg-highlight-soft px-3 py-1 text-highlight-soft-foreground">
             <Sparkles className="size-3.5" /> Always free
           </li>
@@ -308,6 +311,26 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
         </div>
       </div>
     </div>
+  );
+}
+
+/** Underlines the first "free" in a page title with a yellow highlighter swash. */
+function highlightFree(title: string): ReactNode {
+  const match = /\bfree\b/i.exec(title);
+  if (!match) return title;
+
+  const start = match.index;
+  const end = start + match[0].length;
+
+  return (
+    <>
+      {title.slice(0, start)}
+      <span className="relative isolate whitespace-nowrap">
+        <span aria-hidden className="absolute -inset-x-1 bottom-[0.08em] -z-10 h-[0.38em] -rotate-1 rounded-sm bg-highlight/80 dark:bg-highlight/35" />
+        {title.slice(start, end)}
+      </span>
+      {title.slice(end)}
+    </>
   );
 }
 
