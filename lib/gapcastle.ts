@@ -8,6 +8,7 @@ import {
   Dumbbell,
   GraduationCap,
   Plug,
+  Stethoscope,
   Package,
   type LucideIcon,
 } from "lucide-react";
@@ -74,6 +75,7 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   dumbbell: Dumbbell,
   "graduation-cap": GraduationCap,
   plug: Plug,
+  stethoscope: Stethoscope,
   package: Package,
 };
 
