@@ -4,7 +4,7 @@ import { PickupHubsPage, PickupHubsSkeleton } from "@/components/routes/pickup-h
 
 export const metadata: Metadata = {
   title: "Pickup hubs",
-  description: "Collect free items from a Gratis Castle pickup hub in Lagos, Ogun, Oyo or Abuja — or get them by waybill anywhere in Nigeria.",
+  description: "Collect free items from a Gratis Castle pickup hub in Lagos — or get them by waybill anywhere else in Nigeria.",
   alternates: { canonical: "/pickup-hubs" },
 };
 

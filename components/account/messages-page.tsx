@@ -9,6 +9,7 @@ import { ArrowLeft, Ban, Flag, ImagePlus, MessageCircle, MoreVertical, Send, X }
 import { toast } from "sonner";
 import { RequestStatusBadge } from "@/components/account/status-badges";
 import { ReportDialog } from "@/components/report-dialog";
+import { MeetupSafetyWarning } from "@/components/safety/meetup-safety-warning";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -145,6 +146,7 @@ export function MessagesPage() {
             <ConversationMenu conversationId={selected.id} onBlock={block} />
           </header>
           <div className="max-h-[480px] flex-1 space-y-3 overflow-y-auto bg-background px-4 py-5 sm:px-6">
+            <MeetupSafetyWarning className="p-3 text-xs" />
             {messages.data?.length ? messages.data.map((message) => message.is_system ? (
               <p key={message.id} className="mx-auto max-w-md rounded-full bg-accent/50 px-4 py-1.5 text-center text-xs text-accent-foreground">{message.body}</p>
             ) : (
@@ -157,7 +159,7 @@ export function MessagesPage() {
                   </div>
                 </div>
               </div>
-            )) : <p className="py-10 text-center text-sm text-muted-foreground">Say hello and arrange a time that works for both of you.</p>}
+            )) : <p className="py-10 text-center text-sm text-muted-foreground">Say hello! Keep every conversation on Gratis Castle — handovers happen at our pickup hubs or by waybill.</p>}
             <div ref={bottomRef} />
           </div>
           <form onSubmit={sendMessage} className="border-t border-border p-3 sm:p-4">

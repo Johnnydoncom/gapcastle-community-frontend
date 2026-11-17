@@ -1,3 +1,18 @@
+/** Shown wherever members might be tempted to arrange a private handover (mostly outside hub states). */
+export const MEETUP_WARNING =
+  "Gratis Castle only supports handovers at our pickup hubs or by waybill. Meeting another member in person is against our guidelines, isn't protected by Gratis Castle and is entirely at your own risk — arranging private meetups can also lead to your account being suspended. If you still choose to meet, be security conscious:";
+
+export const MEETUP_SAFETY_TIPS = [
+  "Meet only in a busy, public, well-lit place in daylight — a shopping mall, bank hall or the front of a police station. Never at a home, hotel, uncompleted building or quiet street.",
+  "Don't go alone. Take a trusted friend or family member with you.",
+  "Tell someone where you're going, who you're meeting and when, and share your live location with them.",
+  "Never send money first. Every item on Gratis Castle is free — anyone asking for a \"transport\", \"logistics\" or \"holding\" fee upfront is likely a scammer.",
+  "Never share your home address, bank details, BVN, ATM card, PINs, one-time codes or copies of your ID.",
+  "Don't get into anyone's car or follow them to a second location. If the plan changes at the last minute, walk away.",
+  "Keep your phone charged, carry only what you need and keep valuables out of sight.",
+  "Trust your instincts — if anything feels off, leave and report the member. In an emergency, call 112.",
+];
+
 export type ContentSection = { heading: string; body?: string; points?: string[] };
 export type ContentPageData = { eyebrow: string; title: string; intro: string; updated?: string; sections: ContentSection[] };
 
@@ -14,8 +29,8 @@ export const CONTENT_PAGES = {
       {
         heading: "Pickup hubs and waybill",
         points: [
-          "Pickup hubs are run by Gratis Castle and set by our team — members can't choose their own pickup spots. We're in Lagos, Ogun, Oyo and Abuja, with more states coming.",
-          "No hub in your state? Choose waybill delivery. Any transport cost is shown in the app and confirmed by you before it's sent.",
+          "Pickup hubs are run by Gratis Castle and set by our team — members can't choose their own pickup spots. We're currently in Lagos only, with more states coming.",
+          "Outside Lagos (or anywhere without a hub)? Choose waybill delivery. Any transport cost is shown in the app and confirmed by you before it's sent.",
           "For everyone's safety, givers and receivers never meet in person.",
           "The item itself is always free. A waybill cost is never a price for the item.",
         ],
@@ -51,6 +66,7 @@ export const CONTENT_PAGES = {
     sections: [
       { heading: "Protect your privacy", points: ["Only share a general area in listings — never your home address.", "Your phone number and delivery address are only seen by the Gratis Castle team, never by the other member.", "Keep all conversations on Gratis Castle."] },
       { heading: "No meetups", points: ["Givers and receivers never meet in person. Gratis Castle staff handle drop-off and collection at our pickup hubs.", "Pickup hubs are set by Gratis Castle — if anyone suggests meeting somewhere else, decline and report it.", "Bring a valid ID when collecting from a hub."] },
+      { heading: "If someone suggests meeting in person", body: MEETUP_WARNING, points: MEETUP_SAFETY_TIPS },
       { heading: "Watch out for scams", points: ["Nobody should ask you to pay for an item on Gratis Castle.", "Never share bank details, card numbers or one-time codes.", "Be wary of anyone pressuring you to move off the platform quickly."] },
       { heading: "Delivery", body: "Waybill is arranged by the Gratis Castle team. If it has a transport cost, we show it in the app and you confirm it before anything is sent. The item itself remains free." },
       { heading: "Blocking and reporting", body: "You can block a member from their profile or a conversation. Blocked members can't message you or request your items. Report anything that breaks our guidelines." },
@@ -66,7 +82,8 @@ export const CONTENT_PAGES = {
       { heading: "Who decides who gets an item?", body: "The giver. They read each request and choose who receives the item. Only one person can receive each item." },
       { heading: "Will my address be public?", body: "No. Listings only show a general area, and your phone and delivery address are only visible to the Gratis Castle team." },
       { heading: "Do I meet the giver or receiver?", body: "No — never. For safety, givers drop items at a Gratis Castle pickup hub (or we send them by waybill) and receivers collect from their chosen hub." },
-      { heading: "Where are the pickup hubs?", body: "Gratis Castle runs pickup hubs in Lagos, Ogun, Oyo and Abuja, with more states coming. See the Pickup hubs page for addresses and opening hours." },
+      { heading: "Where are the pickup hubs?", body: "Our pickup hubs are currently in Lagos only. Everywhere else in Nigeria, choose waybill delivery when you request — the item stays free. The Pickup hubs page always shows the latest hubs, addresses and opening hours." },
+      { heading: "I'm outside Lagos. Can I meet the giver instead?", body: "We strongly advise against it. Private meetups are against our guidelines, aren't covered by Gratis Castle and are entirely at your own risk — choose waybill delivery instead. If you still decide to meet, read the safety tips on our Safety page first." },
       { heading: "What does “Demo” mean on a listing?", body: "Demo listings are samples that show how Gratis Castle works. They aren't real community items and are never counted in community statistics." },
       { heading: "How do I report a problem?", body: "Use the report option on a listing, profile or conversation, or contact us. Moderators review every report." },
     ],

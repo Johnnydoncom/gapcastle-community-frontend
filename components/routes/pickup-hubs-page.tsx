@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Clock, MapPin, Navigation, Phone, Truck } from "lucide-react";
+import { MeetupSafetyWarning } from "@/components/safety/meetup-safety-warning";
 import { Button } from "@/components/ui/button";
 import { getStates } from "@/lib/server/api";
 import type { NgState, PickupLocation } from "@/lib/types";
@@ -64,6 +65,7 @@ export async function PickupHubsPage() {
           <ul className="mt-5 flex flex-wrap gap-2">
             {others.map((state) => <li key={state.id} className="rounded-full bg-muted px-3 py-1 text-sm">{state.name}</li>)}
           </ul>
+          <MeetupSafetyWarning className="mt-6" />
           <Button asChild className="mt-6"><Link href="/explore">Find something free</Link></Button>
         </section>
       )}

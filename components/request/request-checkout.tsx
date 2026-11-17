@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, Check, CheckCircle2, Clock, Info, Loader2, MapPin, MessageCircle, Package, Phone, Send, ShieldCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
+import { MeetupSafetyWarning } from "@/components/safety/meetup-safety-warning";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/form-fields";
 import { ApiError, api } from "@/lib/api";
@@ -207,6 +208,8 @@ export function RequestCheckout({
                     There&apos;s no Gratis Castle pickup hub in {state.name} yet, so this item will come to you by waybill.
                   </p>
                 )}
+                <MeetupSafetyWarning defaultOpen />
+
                 <div id="field-delivery_city" className="space-y-1.5">
                   <Label htmlFor="city">City / LGA</Label>
                   <Input id="city" value={city} onChange={(event) => setCity(event.target.value)} placeholder="e.g. Port Harcourt" maxLength={120} autoComplete="address-level2" aria-invalid={!!errors.delivery_city} className="h-12 text-base sm:text-sm" />

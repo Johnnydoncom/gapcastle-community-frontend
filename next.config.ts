@@ -12,6 +12,8 @@ const securityHeaders = [
 function imageRemotePatterns(): NonNullable<NextConfig["images"]>["remotePatterns"] {
   const patterns: Array<{ protocol: "http" | "https"; hostname: string; port?: string }> = [
     { protocol: "https", hostname: "images.unsplash.com" },
+    // Demo member avatars from the backend's DemoCommunitySeeder.
+    { protocol: "https", hostname: "i.pravatar.cc" },
     { protocol: "https", hostname: "community-api.gapcastle.com" },
     { protocol: "http", hostname: "localhost" },
     { protocol: "http", hostname: "127.0.0.1" },
@@ -30,6 +32,9 @@ function imageRemotePatterns(): NonNullable<NextConfig["images"]>["remotePattern
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
+    // Image Optimization is off: the Vercel Free (Hobby) plan has a small optimisation quota.
+    // <Image> still handles layout and lazy loading, but serves each file's original URL.
+    unoptimized: true,
     remotePatterns: imageRemotePatterns(),
     // The local Laravel API serves photos from localhost; Next blocks private IPs by default.
     dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
