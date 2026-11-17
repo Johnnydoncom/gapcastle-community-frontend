@@ -152,11 +152,6 @@ export function SiteChrome({ children, categoryNav }: { children: ReactNode; cat
             <HeaderIconLink href="/explore" label="Search free items" className="md:hidden"><Search className="size-5" /></HeaderIconLink>
             {user ? (
               <>
-                {user.is_moderator && (
-                  <Button asChild variant="ghost" size="sm" className="hidden xl:inline-flex">
-                    <Link href="/admin"><ShieldCheck className="size-4" /> Admin</Link>
-                  </Button>
-                )}
                 <HeaderIconLink href="/account/saved" label="Saved items" className="hidden sm:flex"><Heart className="size-5" /></HeaderIconLink>
                 <HeaderIconLink href="/account/messages" label="Messages" count={session?.unreadConversations ?? 0} className="hidden sm:flex"><MessageCircle className="size-5" /></HeaderIconLink>
                 <HeaderIconLink href="/account/notifications" label="Notifications" count={session?.unreadNotifications ?? 0}><Bell className="size-5" /></HeaderIconLink>
