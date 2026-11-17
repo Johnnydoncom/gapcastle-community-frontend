@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/categories",
-    title: "Browse categories — Gap Castle Community",
+    title: "Browse categories — Gratis Castle",
     description: "Find free furniture, electronics, clothing, books, baby items and more by category.",
   },
 };

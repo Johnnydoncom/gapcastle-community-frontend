@@ -35,7 +35,7 @@ export function AccountOverviewPage() {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
-        <div><p className="text-sm font-semibold text-primary">Your Gap Castle</p><h1 className="mt-1 text-3xl font-bold">Good to see you, {fullName}</h1><p className="mt-2 text-muted-foreground">Keep track of the good things moving through your community.</p></div>
+        <div><p className="text-sm font-semibold text-primary">Your Gratis Castle</p><h1 className="mt-1 text-3xl font-bold">Good to see you, {fullName}</h1><p className="mt-2 text-muted-foreground">Keep track of the good things moving through your community.</p></div>
         <Button asChild><Link href="/give"><Gift className="size-4" /> Share an item</Link></Button>
       </div>
 

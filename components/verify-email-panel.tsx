@@ -145,7 +145,7 @@ export function VerifyEmailPanel({ initiallySent = false, onVerified }: { initia
   return (
     <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-soft">
       <div className="mb-6 text-center">
-        <Image src={logoMark} alt="Gap Castle" className="mx-auto mb-3 h-12 w-auto" priority />
+        <Image src={logoMark} alt="Gratis Castle" className="mx-auto mb-3 h-12 w-auto" priority />
         <h1 className="text-2xl font-bold">Verify your email</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {sent

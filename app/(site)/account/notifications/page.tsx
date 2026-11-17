@@ -3,7 +3,7 @@ import { NotificationsPage } from "@/components/account/notifications-page";
 
 export const metadata: Metadata = {
   title: "Notifications",
-  description: "Keep up with requests, messages, and activity in your Gap Castle community.",
+  description: "Keep up with requests, messages, and activity in your Gratis Castle community.",
   robots: { index: false, follow: false },
 };
 

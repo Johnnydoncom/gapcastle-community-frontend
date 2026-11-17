@@ -3,7 +3,7 @@ import { AdminLocationsPage } from "@/components/admin/locations-page";
 
 export const metadata: Metadata = {
   title: "Pickup locations",
-  description: "Manage Nigerian states and Gap Castle pickup hubs.",
+  description: "Manage Nigerian states and Gratis Castle pickup hubs.",
   robots: { index: false, follow: false },
 };
 

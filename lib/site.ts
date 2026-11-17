@@ -1,6 +1,6 @@
 /** Canonical public site details used by metadata, JSON-LD and the sitemap. */
 
-export const SITE_NAME = "Gap Castle Community";
+export const SITE_NAME = "Gratis Castle";
 export const SITE_TAGLINE = "Give freely. Receive gratefully. Build community.";
 export const SITE_DESCRIPTION =
   "Discover useful things shared freely by people in your community. Give your unused items a new home or find something you need, completely free.";

@@ -23,7 +23,7 @@ const NOTIFICATION_OPTIONS = [
   { key: "email_requests", label: "Requests", hint: "When someone requests your item, or a giver responds to your request." },
   { key: "email_messages", label: "Messages", hint: "When you receive a new message (at most every 10 minutes per chat)." },
   { key: "email_listing_updates", label: "Listing updates", hint: "Moderation decisions and delivery updates." },
-  { key: "email_community", label: "Community news", hint: "Occasional announcements from the Gap Castle team." },
+  { key: "email_community", label: "Community news", hint: "Occasional announcements from the Gratis Castle team." },
 ];
 
 export function SettingsPage() {

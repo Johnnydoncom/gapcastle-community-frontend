@@ -6,7 +6,7 @@ import { getStats } from "@/lib/server/api";
 import type { CommunityStats } from "@/lib/types";
 
 const VALUES = [
-  { icon: HandHeart, title: "Always free", text: "Nothing on Gap Castle is sold. Delivery costs, if any, are agreed openly and kept separate from the item." },
+  { icon: HandHeart, title: "Always free", text: "Nothing on Gratis Castle is sold. Delivery costs, if any, are agreed openly and kept separate from the item." },
   { icon: ShieldCheck, title: "Safe and private", text: "Only general areas are public, verified members are marked, and moderators review every report." },
   { icon: Leaf, title: "Less waste", text: "Every item that finds a second home is one less thing thrown away." },
   { icon: MessageCircle, title: "Real connections", text: "Givers choose who receives, and every handoff starts with a friendly conversation." },
@@ -39,7 +39,7 @@ export async function CommunityPage() {
         <div className="container-page py-16 sm:py-20">
           <p className="text-sm font-semibold uppercase tracking-wider text-highlight">Our community</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">Small Acts of Giving. Big Community Impact.</h1>
-          <p className="mt-4 max-w-2xl text-lg text-background/80">Gap Castle Community is made of neighbours who give freely, receive gratefully and look out for one another.</p>
+          <p className="mt-4 max-w-2xl text-lg text-background/80">Gratis Castle is made of neighbours who give freely, receive gratefully and look out for one another.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="highlight"><Link href="/auth?mode=join">Join the Community</Link></Button>
             <Button asChild size="lg" variant="outline" className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"><Link href="/give">Give something away</Link></Button>

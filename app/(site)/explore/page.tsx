@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/explore",
-    title: "Explore free items — Gap Castle Community",
+    title: "Explore free items — Gratis Castle",
     description: "Browse free items shared by your community — furniture, electronics, clothes, books and more.",
   },
 };

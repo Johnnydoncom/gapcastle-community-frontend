@@ -106,10 +106,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="max-w-sm rounded-3xl border border-border bg-card p-8 text-center shadow-soft">
           <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary"><ShieldCheck className="size-7" /></span>
           <h1 className="mt-4 text-xl font-extrabold">Admin access required</h1>
-          <p className="mt-2 text-sm text-muted-foreground">This area is for Gap Castle administrators and community moderators.</p>
+          <p className="mt-2 text-sm text-muted-foreground">This area is for Gratis Castle administrators and community moderators.</p>
           <div className="mt-6 grid gap-2">
             {!user && <Button asChild><Link href="/auth?next=/admin">Sign in</Link></Button>}
-            <Button asChild variant="outline"><Link href="/">Back to Gap Castle</Link></Button>
+            <Button asChild variant="outline"><Link href="/">Back to Gratis Castle</Link></Button>
           </div>
         </div>
       </div>
@@ -151,7 +151,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 function SidebarNav({ pathname, counts, onNavigate }: { pathname: string; counts?: Counts; onNavigate: () => void }) {
   return (
     <>
-      <Link href="/admin" onClick={onNavigate} aria-label="Gap Castle admin console" className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
+      <Link href="/admin" onClick={onNavigate} aria-label="Gratis Castle admin console" className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
         <Image src={logoMark} alt="" className="h-8 w-auto shrink-0" sizes="48px" />
         <BrandWordmark inverted tagline="Admin console" />
       </Link>

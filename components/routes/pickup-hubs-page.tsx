@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { getStates } from "@/lib/server/api";
 import type { NgState, PickupLocation } from "@/lib/types";
 
-/** Public directory of Gap Castle pickup hubs, grouped by state. Data is managed in Admin › Pickup locations. */
+/** Public directory of Gratis Castle pickup hubs, grouped by state. Data is managed in Admin › Pickup locations. */
 export async function PickupHubsPage() {
   const states = await getStates().then((response) => response.data).catch((): NgState[] => []);
   const withHubs = states.filter((state) => state.pickup_available);
@@ -15,7 +15,7 @@ export async function PickupHubsPage() {
       <header className="relative overflow-hidden rounded-3xl bg-primary-700 p-6 text-white sm:p-10">
         <div className="absolute -right-16 -top-16 size-64 rounded-full bg-brand-yellow-400/20 blur-3xl" />
         <p className="relative text-xs font-bold uppercase tracking-wider text-brand-yellow-300">Collect it yourself</p>
-        <h1 className="relative mt-2 text-2xl font-extrabold sm:text-4xl">Gap Castle pickup hubs</h1>
+        <h1 className="relative mt-2 text-2xl font-extrabold sm:text-4xl">Gratis Castle pickup hubs</h1>
         <p className="relative mt-3 max-w-xl text-sm text-primary-100 sm:text-base">
           When you request an item, choose a hub in your state and collect it there for free. No hub in your state yet? Choose waybill delivery instead — the item stays free.
         </p>

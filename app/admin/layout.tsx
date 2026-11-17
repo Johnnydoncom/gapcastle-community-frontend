@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 
 export const metadata: Metadata = {
-  title: { default: "Admin", template: "%s · Gap Castle Admin" },
+  title: { default: "Admin", template: "%s · Gratis Castle Admin" },
   robots: { index: false, follow: false },
 };
 

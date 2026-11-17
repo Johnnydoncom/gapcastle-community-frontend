@@ -82,7 +82,7 @@ export function ItemActions({ listingId, listingSlug, title, status, isRequestab
     const url = `${window.location.origin}${itemPath}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title, text: `Free on Gap Castle Community: ${title}`, url });
+        await navigator.share({ title, text: `Free on Gratis Castle: ${title}`, url });
       } else {
         await navigator.clipboard.writeText(url);
         toast.success("Link copied");
@@ -119,7 +119,7 @@ export function ItemActions({ listingId, listingSlug, title, status, isRequestab
           <p className="font-bold text-primary-800">Your request · {REQUEST_STATUS_LABELS[activeRequest.status]}</p>
           <p className="mt-1 text-primary-900/75">
             {activeRequest.status === "pending" && "The giver has been notified. You'll hear back here and by notification."}
-            {activeRequest.status === "accepted" && "Accepted! Gap Castle will let you know when it's ready at your hub or on its way by waybill."}
+            {activeRequest.status === "accepted" && "Accepted! Gratis Castle will let you know when it's ready at your hub or on its way by waybill."}
             {activeRequest.status === "declined" && "The giver chose someone else this time — there are plenty more good things to discover."}
             {activeRequest.status === "completed" && "This item is yours. Enjoy!"}
           </p>

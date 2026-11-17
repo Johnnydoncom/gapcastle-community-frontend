@@ -210,7 +210,7 @@ async function HubsPromo({ className }: { className?: string }) {
       <div className="relative">
         <p className="text-xs font-bold uppercase tracking-wider text-primary">Pickup hubs</p>
         <p className="mt-1.5 text-lg font-extrabold leading-snug">
-          {states.length > 0 ? `Collect in ${formatList(states.map((state) => state.name.replace(" (FCT)", "")))}` : "Collect from a Gap Castle hub"}
+          {states.length > 0 ? `Collect in ${formatList(states.map((state) => state.name.replace(" (FCT)", "")))}` : "Collect from a Gratis Castle hub"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">No hub in your state? Get it by waybill.</p>
       </div>
@@ -228,7 +228,7 @@ function ValueStrip() {
   ];
 
   return (
-    <section className="container-page mt-4" aria-label="Why Gap Castle">
+    <section className="container-page mt-4" aria-label="Why Gratis Castle">
       <ul className="scrollbar-none -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-border sm:overflow-visible sm:rounded-2xl sm:border sm:border-border sm:bg-card sm:px-0 sm:py-1">
         {items.map((item) => (
           <li key={item.title} className="flex shrink-0 items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-5 sm:py-3">
@@ -354,7 +354,7 @@ async function PickupHubsSection() {
 
   return (
     <section className="container-page mt-10" aria-labelledby="hubs-title">
-      <SectionHeader id="hubs-title" eyebrow="Collect it yourself" title="Gap Castle pickup hubs" href="/pickup-hubs" linkLabel="All hubs" />
+      <SectionHeader id="hubs-title" eyebrow="Collect it yourself" title="Gratis Castle pickup hubs" href="/pickup-hubs" linkLabel="All hubs" />
       <div className="scrollbar-none -mx-4 mt-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-4">
         {states.map((state) => (
           <Link key={state.id} href={`/pickup-hubs#${state.slug}`} className="group w-[72%] shrink-0 snap-start rounded-2xl border border-border bg-card p-4 transition-[box-shadow,transform] hover:shadow-lift active:scale-[0.98] sm:w-auto">
@@ -400,7 +400,7 @@ function HowItWorks() {
   const steps = [
     { icon: PackageSearch, title: "Find something useful", text: "Browse free items shared across Nigeria and save the ones you like." },
     { icon: HandHeart, title: "Request it — free", text: "Introduce yourself, choose a pickup hub in your state or waybill delivery." },
-    { icon: MessageCircle, title: "Collect safely", text: "When the giver accepts, Gap Castle handles the handover — you collect from the hub. No meetups, ever." },
+    { icon: MessageCircle, title: "Collect safely", text: "When the giver accepts, Gratis Castle handles the handover — you collect from the hub. No meetups, ever." },
   ];
 
   return (

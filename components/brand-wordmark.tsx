@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Typeset "Gap Castle / COMMUNITY" lockup that sits beside the logo mark.
+ * Typeset "Gratis Castle / ALWAYS FREE" lockup that sits beside the logo mark.
  * The tagline is letter-justified so it spans exactly the width of the name,
  * giving a tidy, optically aligned block instead of two ragged lines.
  */
 export function BrandWordmark({
   inverted = false,
-  tagline = "Community",
+  tagline = "Always free",
   className,
 }: {
   inverted?: boolean;
@@ -22,7 +22,7 @@ export function BrandWordmark({
           inverted ? "text-white" : "text-primary-800",
         )}
       >
-        Gap Castle
+        Gratis Castle
       </span>
       <span
         className={cn(

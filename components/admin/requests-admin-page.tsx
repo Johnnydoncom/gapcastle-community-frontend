@@ -27,7 +27,7 @@ type Page = { data: AdminRequest[]; meta: { current_page: number; last_page: num
 
 /**
  * Logistics view of every request. Givers and receivers never meet, so the
- * Gap Castle team uses this screen to run hub drop-offs/collections and to set
+ * Gratis Castle team uses this screen to run hub drop-offs/collections and to set
  * up waybills (with any transport cost disclosed to the receiver).
  */
 export function AdminRequestsPage() {

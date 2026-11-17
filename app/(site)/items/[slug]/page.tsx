@@ -28,13 +28,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         type: "website",
         url: canonical,
-        title: `${listing.title} — Free on Gap Castle Community`,
+        title: `${listing.title} — Free on Gratis Castle`,
         description,
         images: images.length > 0 ? images.map((url) => ({ url })) : [{ url: FALLBACK_IMAGE, width: 768, height: 553 }],
       },
       twitter: {
         card: "summary_large_image",
-        title: `${listing.title} — Free on Gap Castle Community`,
+        title: `${listing.title} — Free on Gratis Castle`,
         description,
         images: images.length > 0 ? images : [FALLBACK_IMAGE],
       },

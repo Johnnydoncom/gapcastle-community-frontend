@@ -46,7 +46,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/auth/[a
     });
   } catch {
     return NextResponse.json(
-      { message: "We couldn't reach the Gap Castle service. Please try again in a moment." },
+      { message: "We couldn't reach the Gratis Castle service. Please try again in a moment." },
       { status: 503 },
     );
   }

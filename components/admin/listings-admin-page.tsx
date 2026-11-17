@@ -83,7 +83,7 @@ export function AdminListingsPage() {
     <div>
       <PageHeader
         title="Listings"
-        description="Every free item on Gap Castle. Approve new listings, fix details, pause or remove anything that breaks the guidelines."
+        description="Every free item on Gratis Castle. Approve new listings, fix details, pause or remove anything that breaks the guidelines."
         actions={<Button asChild><Link href="/give" target="_blank"><Plus className="size-4" /> New listing</Link></Button>}
       />
 

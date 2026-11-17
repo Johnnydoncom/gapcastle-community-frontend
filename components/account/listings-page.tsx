@@ -190,12 +190,12 @@ function IncomingRequests({ listing, onChange }: { listing: Listing; onChange: (
                     <p className="mt-1 text-sm text-muted-foreground">
                       <span className="font-medium text-foreground">Collection: </span>
                       {request.fulfillment_method === "pickup"
-                        ? `Gap Castle hub${request.pickup_location ? ` — ${request.pickup_location.name}, ${request.pickup_location.area}` : ""}`
+                        ? `Gratis Castle hub${request.pickup_location ? ` — ${request.pickup_location.name}, ${request.pickup_location.area}` : ""}`
                         : `Waybill to ${request.state?.name ?? "Nigeria"}`}
                     </p>
                     {request.status === "accepted" && (
                       <p className="mt-2 rounded-lg bg-primary-50 px-3 py-2 text-xs text-primary-800">
-                        The Gap Castle team will contact you to arrange the drop-off at a pickup hub. You never need to meet the receiver or share your address.
+                        The Gratis Castle team will contact you to arrange the drop-off at a pickup hub. You never need to meet the receiver or share your address.
                       </p>
                     )}
                     {delivery && (

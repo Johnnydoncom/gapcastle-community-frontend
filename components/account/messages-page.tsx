@@ -178,7 +178,7 @@ export function MessagesPage() {
               <Input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Write a message…" aria-label="Write a message" maxLength={2000} />
               <Button type="submit" disabled={(!draft.trim() && !image) || sending} aria-label="Send message"><Send className="size-4" /><span className="hidden sm:inline">Send</span></Button>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">Keep chats on Gap Castle, never send money for an item, and never share your home address — Gap Castle handles every handover.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">Keep chats on Gratis Castle, never send money for an item, and never share your home address — Gratis Castle handles every handover.</p>
           </form>
         </> : <div className="m-auto max-w-sm px-6 text-center"><MessageCircle className="mx-auto size-10 text-primary" /><h2 className="mt-4 text-xl font-bold">Good things start with hello</h2><p className="mt-2 text-sm text-muted-foreground">Choose a conversation to talk about pickup, delivery, and the item’s next home.</p></div>}
       </section>

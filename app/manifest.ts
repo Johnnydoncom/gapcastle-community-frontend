@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 
-/** Web app manifest — makes Gap Castle installable as an app on phones and desktops. */
+/** Web app manifest — makes Gratis Castle installable as an app on phones and desktops. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Gap Castle Community",
-    short_name: "Gap Castle",
+    name: "Gratis Castle",
+    short_name: "Gratis Castle",
     description: "Free items shared by people across Nigeria. Give what you don't need, find what you do.",
     start_url: "/?source=pwa",
     scope: "/",

@@ -4,7 +4,7 @@ import { ResetPasswordPage } from "@/components/routes/reset-password-page";
 
 export const metadata: Metadata = {
   title: "Reset password",
-  description: "Set a new password for your Gap Castle Community account.",
+  description: "Set a new password for your Gratis Castle account.",
   robots: { index: false, follow: false },
 };
 

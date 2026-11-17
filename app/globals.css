@@ -4,9 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Gap Castle Community design system.
+ * Gratis Castle design system.
  *
- * Official Gap Castle Brand Color System:
+ * Official Gratis Castle Brand Color System:
  *   Primary: Brand Blue ramp `primary-*` (600 is #144A96 exactly) -> trust, reliability
  *   Secondary / Accent: Brand Yellow ramp `brand-yellow-*` (500 is #E1D050 exactly) -> warmth, generosity
  * Yellow always carries dark text (highlight-foreground) for contrast.

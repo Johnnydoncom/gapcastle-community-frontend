@@ -48,7 +48,7 @@ export async function ProfilePage({ slug }: { slug: string }) {
             image: member.avatar_url ?? undefined,
             description: member.bio ?? undefined,
             homeLocation: member.location ? { "@type": "Place", name: member.location } : undefined,
-            memberOf: { "@type": "Organization", name: "Gap Castle Community" },
+            memberOf: { "@type": "Organization", name: "Gratis Castle" },
           }),
         }}
       />

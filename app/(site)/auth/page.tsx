@@ -4,7 +4,7 @@ import { AuthPage } from "@/components/routes/auth-page";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in or join Gap Castle Community to give and receive free items.",
+  description: "Sign in or join Gratis Castle to give and receive free items.",
   robots: { index: false, follow: false },
 };
 

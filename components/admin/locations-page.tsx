@@ -302,7 +302,7 @@ function HubDialog({ form, states, onClose, onSaved }: { form: HubForm | null; s
             <Field label="Latitude (optional)"><Input inputMode="decimal" value={draft.latitude} onChange={set("latitude")} placeholder="6.6018" /></Field>
             <Field label="Longitude (optional)"><Input inputMode="decimal" value={draft.longitude} onChange={set("longitude")} placeholder="3.3515" /></Field>
           </div>
-          <Field label="Notes for receivers (optional)"><Textarea value={draft.notes} onChange={set("notes")} rows={2} maxLength={1000} placeholder="e.g. Bring a valid ID. Ask for the Gap Castle desk." /></Field>
+          <Field label="Notes for receivers (optional)"><Textarea value={draft.notes} onChange={set("notes")} rows={2} maxLength={1000} placeholder="e.g. Bring a valid ID. Ask for the Gratis Castle desk." /></Field>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={draft.is_active} onCheckedChange={(checked) => setDraft((current) => ({ ...current, is_active: checked === true }))} />
             Open for pickups

@@ -4,7 +4,7 @@ import { CommunityPage, CommunitySkeleton } from "@/components/routes/community-
 
 export const metadata: Metadata = {
   title: "Our community",
-  description: "Small acts of giving, big community impact. Meet Gap Castle Community.",
+  description: "Small acts of giving, big community impact. Meet Gratis Castle.",
   alternates: { canonical: "/community" },
 };
 

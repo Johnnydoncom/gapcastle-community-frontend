@@ -36,7 +36,7 @@ export type Listing = {
   slug: string;
   title: string;
   description: string;
-  /** Always true — Gap Castle items are never sold. */
+  /** Always true — Gratis Castle items are never sold. */
   is_free: true;
   condition: ListingCondition;
   condition_label: string;

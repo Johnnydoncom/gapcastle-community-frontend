@@ -144,7 +144,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
             ))}
           </div>
         </details>
-        <p className="text-xs text-muted-foreground">Only general areas are shown. Every handover goes through a Gap Castle hub or waybill.</p>
+        <p className="text-xs text-muted-foreground">Only general areas are shown. Every handover goes through a Gratis Castle hub or waybill.</p>
       </div>
 
       {activeFilters > 0 && (

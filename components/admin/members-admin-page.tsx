@@ -76,7 +76,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
     <div>
       <PageHeader
         title={title}
-        description={scope === "staff" ? "People who run Gap Castle. Administrators can change everything; moderators review listings and reports." : "Everyone who gives and receives on Gap Castle."}
+        description={scope === "staff" ? "People who run Gratis Castle. Administrators can change everything; moderators review listings and reports." : "Everyone who gives and receives on Gratis Castle."}
         actions={isAdmin && <Button onClick={() => setForm(blank)}><Plus className="size-4" /> {scope === "staff" ? "Add staff account" : "Add member"}</Button>}
       />
 

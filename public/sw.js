@@ -1,11 +1,11 @@
 /*
- * Gap Castle Community service worker.
+ * Gratis Castle service worker.
  * - Pages: network first, falling back to the last cached copy, then /offline.
  * - Build assets (/_next/static), icons and brand files: cache first (they're content-hashed or static).
  * - Images: stale-while-revalidate with a size cap.
  * - API calls (/api/*) and non-GET requests are never cached, so member data is always live.
  */
-const VERSION = "gc-v1";
+const VERSION = "gc-v2";
 const PAGE_CACHE = `${VERSION}-pages`;
 const STATIC_CACHE = `${VERSION}-static`;
 const IMAGE_CACHE = `${VERSION}-images`;

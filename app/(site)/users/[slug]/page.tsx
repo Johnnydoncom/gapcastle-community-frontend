@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { data: member } = await getProfile(slug);
     const canonical = profilePath(member.slug || String(member.id));
     const description = member.bio?.replace(/\s+/g, " ").slice(0, 158).trim()
-      || `${member.name} shares free items with neighbours on Gap Castle Community.`;
+      || `${member.name} shares free items with neighbours on Gratis Castle.`;
 
     return {
       title: member.name,
@@ -26,13 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         type: "profile",
         url: canonical,
-        title: `${member.name} — Gap Castle Community`,
+        title: `${member.name} — Gratis Castle`,
         description,
         images: member.avatar_url ? [{ url: member.avatar_url }] : [{ url: FALLBACK_IMAGE, width: 768, height: 553 }],
       },
       twitter: {
         card: "summary",
-        title: `${member.name} — Gap Castle Community`,
+        title: `${member.name} — Gratis Castle`,
         description,
       },
     };

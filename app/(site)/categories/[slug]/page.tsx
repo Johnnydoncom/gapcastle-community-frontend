@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
     const { data: category } = await getCategory(slug);
     const canonical = categoryPath(category.slug || String(category.id));
     const description = category.description
-      ?? `Browse free ${category.name.toLowerCase()} shared by neighbours on Gap Castle Community. Everything is free — take what you need, give what you don't.`;
+      ?? `Browse free ${category.name.toLowerCase()} shared by neighbours on Gratis Castle. Everything is free — take what you need, give what you don't.`;
 
     return {
       title: `Free ${category.name}`,
@@ -29,15 +29,15 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
       openGraph: {
         type: "website",
         url: canonical,
-        title: `Free ${category.name} — Gap Castle Community`,
+        title: `Free ${category.name} — Gratis Castle`,
         description,
         images: category.image_url
           ? [{ url: category.image_url }]
-          : [{ url: FALLBACK_IMAGE, width: 768, height: 553, alt: "Gap Castle Community" }],
+          : [{ url: FALLBACK_IMAGE, width: 768, height: 553, alt: "Gratis Castle" }],
       },
       twitter: {
         card: "summary_large_image",
-        title: `Free ${category.name} — Gap Castle Community`,
+        title: `Free ${category.name} — Gratis Castle`,
         description,
       },
     };

@@ -4,7 +4,7 @@ import { MessagesPage } from "@/components/account/messages-page";
 
 export const metadata: Metadata = {
   title: "Messages",
-  description: "Chat with members about free items. Gap Castle handles every handover.",
+  description: "Chat with members about free items. Gratis Castle handles every handover.",
   robots: { index: false, follow: false },
 };
 

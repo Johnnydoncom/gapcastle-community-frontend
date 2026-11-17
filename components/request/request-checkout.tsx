@@ -26,7 +26,7 @@ type Errors = Record<string, string | undefined>;
 
 /**
  * Request checkout. Nigeria only: the receiver picks their state; if it has an
- * active Gap Castle pickup hub they can collect there, otherwise pickup is
+ * active Gratis Castle pickup hub they can collect there, otherwise pickup is
  * disabled and waybill/delivery is offered. Submits through the Next.js API
  * route proxy (/api/backend) — no server actions.
  */
@@ -164,7 +164,7 @@ export function RequestCheckout({
                 onSelect={() => { setMethod("pickup"); setHubId(hubs[0]?.id ?? null); }}
                 icon={MapPin}
                 title="Pickup hub"
-                text={state?.pickup_available ? `Collect free from a Gap Castle hub in ${state.name}.` : state ? `No pickup hub in ${state.name} yet.` : "Choose your state first."}
+                text={state?.pickup_available ? `Collect free from a Gratis Castle hub in ${state.name}.` : state ? `No pickup hub in ${state.name} yet.` : "Choose your state first."}
               />
               <MethodCard
                 selected={method === "delivery"}
@@ -204,7 +204,7 @@ export function RequestCheckout({
                 {state && !state.pickup_available && (
                   <p className="flex gap-2 rounded-xl bg-muted px-3.5 py-3 text-xs text-muted-foreground">
                     <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-                    There&apos;s no Gap Castle pickup hub in {state.name} yet, so this item will come to you by waybill.
+                    There&apos;s no Gratis Castle pickup hub in {state.name} yet, so this item will come to you by waybill.
                   </p>
                 )}
                 <div id="field-delivery_city" className="space-y-1.5">
@@ -216,7 +216,7 @@ export function RequestCheckout({
                   <Label htmlFor="address">Delivery address or waybill park</Label>
                   <Textarea id="address" value={address} onChange={(event) => setAddress(event.target.value)} rows={3} maxLength={500} autoComplete="street-address" placeholder="Street, area and a nearby landmark — or the motor park where you'll collect the waybill" aria-invalid={!!errors.delivery_address} className="text-base sm:text-sm" />
                   <FieldError message={errors.delivery_address} />
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5 text-success" /> Private — only the Gap Castle team sees this, never the giver.</p>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5 text-success" /> Private — only the Gratis Castle team sees this, never the giver.</p>
                 </div>
               </div>
             )}
@@ -230,7 +230,7 @@ export function RequestCheckout({
                 <Input id="phone" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="0803 123 4567" aria-invalid={!!errors.recipient_phone} className="h-12 pl-10 text-base sm:text-sm" />
               </div>
               <FieldError message={errors.recipient_phone} />
-              <p className="text-xs text-muted-foreground">Used by the Gap Castle hub or courier to reach you. Never shown to the giver.</p>
+              <p className="text-xs text-muted-foreground">Used by the Gratis Castle hub or courier to reach you. Never shown to the giver.</p>
             </div>
           </Step>
 
@@ -375,7 +375,7 @@ function SuccessScreen({ listing, request, hubName }: { listing: Summary; reques
   const steps = [
     { title: "Request sent", text: `${listing.giverName} has been notified.`, done: true },
     { title: "Giver reviews", text: "They choose who receives the item.", done: false },
-    { title: request.fulfillment_method === "pickup" ? "Collect at the hub" : "Waybill on its way", text: request.fulfillment_method === "pickup" ? `We'll confirm when it's ready at ${hubName ?? "your hub"}.` : "The Gap Castle team arranges the waybill and shows you any cost first.", done: false },
+    { title: request.fulfillment_method === "pickup" ? "Collect at the hub" : "Waybill on its way", text: request.fulfillment_method === "pickup" ? `We'll confirm when it's ready at ${hubName ?? "your hub"}.` : "The Gratis Castle team arranges the waybill and shows you any cost first.", done: false },
   ];
 
   return (

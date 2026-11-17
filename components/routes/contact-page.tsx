@@ -7,7 +7,7 @@ export function ContactPage() {
     <div className="container-page py-10">
       <p className="text-sm font-semibold text-primary">Contact us</p>
       <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">We&apos;d love to hear from you</h1>
-      <p className="mt-3 max-w-2xl text-lg text-muted-foreground">Questions, feedback or a safety concern? Send us a message and the Gap Castle team will reply by email.</p>
+      <p className="mt-3 max-w-2xl text-lg text-muted-foreground">Questions, feedback or a safety concern? Send us a message and the Gratis Castle team will reply by email.</p>
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <ContactForm />
         <aside className="space-y-4">

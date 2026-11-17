@@ -26,7 +26,7 @@ export function InstallAppButton({ label = "Install the app", ...props }: Button
             setIosHelp(true);
             return;
           }
-          if (await install()) toast.success("Gap Castle is on your home screen");
+          if (await install()) toast.success("Gratis Castle is on your home screen");
         }}
       >
         <Download className="size-4" /> {label}
@@ -34,7 +34,7 @@ export function InstallAppButton({ label = "Install the app", ...props }: Button
       <Dialog open={iosHelp} onOpenChange={setIosHelp}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Gap Castle to your Home Screen</DialogTitle>
+            <DialogTitle>Add Gratis Castle to your Home Screen</DialogTitle>
             <DialogDescription>Open it like an app — full screen, one tap away.</DialogDescription>
           </DialogHeader>
           <ol className="space-y-3 text-sm">

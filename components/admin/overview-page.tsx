@@ -51,7 +51,7 @@ export function AdminOverviewPage() {
 
   return (
     <div>
-      <PageHeader title={`Welcome back, ${user?.name.split(" ")[0] ?? "admin"}`} description="How the Gap Castle community is doing. Growth figures exclude demo content." actions={rangeControl} />
+      <PageHeader title={`Welcome back, ${user?.name.split(" ")[0] ?? "admin"}`} description="How the Gratis Castle community is doing. Growth figures exclude demo content." actions={rangeControl} />
 
       {isError && <p className="mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">We couldn&apos;t load the dashboard data. Please refresh.</p>}
 

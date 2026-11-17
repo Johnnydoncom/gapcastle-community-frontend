@@ -96,7 +96,7 @@ function isActive(pathname: string, href: string) {
 
 function Logo({ inverted = false, compact = false }: { inverted?: boolean; compact?: boolean }) {
   return (
-    <Link href="/" className="inline-flex shrink-0 items-center gap-2.5" aria-label="Gap Castle Community home">
+    <Link href="/" className="inline-flex shrink-0 items-center gap-2.5" aria-label="Gratis Castle home">
       <Image src={logoMark} alt="" priority className="h-8 w-auto shrink-0" sizes="48px" />
       <BrandWordmark inverted={inverted} className={cn(compact && "max-[359px]:hidden")} />
     </Link>
@@ -366,7 +366,7 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
         <div className="container-page grid gap-4 py-6 text-sm sm:grid-cols-3">
           {[
             { icon: Gift, title: "Always free", text: "No prices, no payments for items." },
-            { icon: MapPin, title: "Pickup hubs", text: "Collect from a Gap Castle hub in your state." },
+            { icon: MapPin, title: "Pickup hubs", text: "Collect from a Gratis Castle hub in your state." },
             { icon: Truck, title: "Waybill nationwide", text: "Get items sent anywhere in Nigeria." },
           ].map((item) => (
             <div key={item.title} className="flex items-center gap-3">
@@ -401,8 +401,8 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
           { href: "/safety", label: "Safety guidelines" },
           { href: "/contact", label: "Contact us" },
         ]} />
-        <FooterColumn title="Gap Castle" links={[
-          { href: "/about", label: "About Gap Castle" },
+        <FooterColumn title="Gratis Castle" links={[
+          { href: "/about", label: "About Gratis Castle" },
           { href: "/community-guidelines", label: "Community guidelines" },
           { href: "/privacy", label: "Privacy policy" },
           { href: "/terms", label: "Terms of service" },
@@ -410,7 +410,7 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
       </div>
       <div className="border-t border-white/10">
         <p className="container-page py-5 text-xs text-ink-foreground/60">
-          © <CurrentYear /> Gap Castle Limited · Serving Nigeria only · Waybill or delivery costs, if any, are separate and agreed openly.
+          © <CurrentYear /> Gratis Castle · Serving Nigeria only · Waybill or delivery costs, if any, are separate and agreed openly.
         </p>
       </div>
     </footer>

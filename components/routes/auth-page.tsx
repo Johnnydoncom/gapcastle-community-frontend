@@ -66,7 +66,7 @@ export function AuthPage() {
     <div className="container-page flex min-h-[calc(100vh-4rem)] items-center justify-center py-10">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-soft">
         <div className="mb-6 text-center">
-          <Image src={logoMark} alt="Gap Castle" className="mx-auto mb-3 h-12 w-auto" priority />
+          <Image src={logoMark} alt="Gratis Castle" className="mx-auto mb-3 h-12 w-auto" priority />
           <h1 className="text-2xl font-bold">{mode === "signin" ? "Welcome back" : "Join the community"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "signin" ? "Sign in to request items and manage your listings." : "Create a free account to give and receive."}
@@ -111,7 +111,7 @@ export function AuthPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          {mode === "signin" ? "New to Gap Castle? " : "Already a member? "}
+          {mode === "signin" ? "New to Gratis Castle? " : "Already a member? "}
           <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
             {mode === "signin" ? "Join the community" : "Sign in"}
           </button>

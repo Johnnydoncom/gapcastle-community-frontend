@@ -49,7 +49,7 @@ function uploadPhoto(file: File, onProgress: (percent: number) => void): Promise
 
 /**
  * The give/edit form, based on gapcastle-lovable/src/routes/give.tsx with upload progress,
- * the Gap Castle handover explainer and a preview step.
+ * the Gratis Castle handover explainer and a preview step.
  */
 export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: (listing: Listing, message: string) => void }) {
   const { user } = useSession();
@@ -216,7 +216,7 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
           <div>
             <p className="font-bold text-primary-800">Safe handover — you never meet the receiver</p>
             <p className="mt-1 text-primary-900/75">
-              When you accept a request, the Gap Castle team contacts you to arrange the drop-off at one of our{" "}
+              When you accept a request, the Gratis Castle team contacts you to arrange the drop-off at one of our{" "}
               <a href="/pickup-hubs" target="_blank" className="font-semibold text-primary underline-offset-2 hover:underline">pickup hubs</a>{" "}
               or a waybill. Receivers collect from the hub or get it by waybill. Never share your home address.
             </p>
