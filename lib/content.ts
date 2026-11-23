@@ -13,7 +13,7 @@ export const MEETUP_SAFETY_TIPS = [
   "Trust your instincts — if anything feels off, leave and report the member. In an emergency, call 112.",
 ];
 
-/** Reviewer-supplied safety banner (homepage strip + checkout). */
+/** Reviewer-supplied safety message (homepage hero slide + Safety page). */
 export const SAFETY_BANNER = {
   title: "A gift should never cost your safety.",
   body: "Items on Gratis Castle are offered for free. Be cautious if anyone asks you for a “release fee”, deposit, payment to reserve an item, or a verification code. Report suspicious requests to Gratis Castle.",

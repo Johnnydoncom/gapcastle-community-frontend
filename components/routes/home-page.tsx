@@ -23,8 +23,8 @@ import { ReviewsSection, ReviewsSectionSkeleton } from "@/components/home/review
 import { ScrollRail } from "@/components/home/scroll-rail";
 import { ItemCard, ItemCardSkeleton } from "@/components/items/item-card";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
-import { SafetyStrip } from "@/components/safety/safety-strip";
 import { Button } from "@/components/ui/button";
+import { SAFETY_BANNER } from "@/lib/content";
 import { categoryIcon, toListingRow } from "@/lib/gapcastle";
 import { getAnnouncements, getCategories, getListings, getStates, getStats } from "@/lib/server/api";
 import { getVisitorArea } from "@/lib/server/area";
@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
  * Marketplace home, server-rendered for SEO: every listing, category and link is
  * in the initial HTML. Client islands only add sliding, saving and the count-up.
  *
- * Order: marketplace hero (category menu · promo slider · quick actions) → promises & safety → categories → fresh items → how it works
+ * Order: marketplace hero (category menu · promo slider incl. the safety slide · quick actions) → promises → categories → fresh items → how it works
  * (getting and giving) → popular items → reviews → community band with live stats.
  */
 export function HomePage() {
@@ -54,7 +54,6 @@ export function HomePage() {
       </section>
 
       <ValueStrip />
-      <SafetyStrip className="mt-3" />
 
       <Suspense fallback={null}>
         <AnnouncementBar />
@@ -139,6 +138,19 @@ const HERO_SLIDES: HeroSlide[] = [
     tone: "yellow",
     primary: { href: "/categories/damaged-but-valuable", label: "Browse repair & reuse" },
     secondary: { href: "/give", label: "Give a damaged item" },
+  },
+  {
+    // Reviewer-supplied anti-scam message, word for word (SAFETY_BANNER).
+    key: "safety",
+    eyebrow: "Stay safe · never pay for a free item",
+    title: "A gift should never",
+    highlight: "cost your safety.",
+    text: SAFETY_BANNER.body,
+    image: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1400&q=70",
+    imagePosition: "center",
+    tone: "navy",
+    primary: { href: "/contact?topic=safety", label: "Report" },
+    secondary: { href: "/safety", label: "Safety tips" },
   },
 ];
 
