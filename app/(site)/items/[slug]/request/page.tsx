@@ -7,7 +7,7 @@ type Props = {
 };
 
 export const metadata: Metadata = {
-  title: "Request item",
+  title: "Checkout",
   robots: { index: false, follow: false },
 };
 

@@ -9,6 +9,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/form-fields";
+import { Checkbox } from "@/components/ui/toggles";
 import { SESSION_KEY, sessionFromAccount } from "@/hooks/use-session";
 import { ApiError, authRequest } from "@/lib/api";
 import type { Account } from "@/lib/types";
@@ -28,16 +29,33 @@ export function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
+  const [adult, setAdult] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && !adult) {
+      toast.error("You must be 18 or older to join Gratis Castle.");
+      return;
+    }
     setBusy(true);
     try {
       const { user } = mode === "signup"
-        ? await authRequest<{ user: Account }>("register", { name: fullName || email.split("@")[0], email, password, location: location || null })
+        ? await authRequest<{ user: Account }>("register", {
+          first_name: firstName.trim(),
+          middle_name: middleName.trim() || null,
+          last_name: lastName.trim(),
+          email,
+          phone,
+          password,
+          location: location || null,
+          adult_confirmed: adult,
+        })
         : await authRequest<{ user: Account }>("login", { email, password });
       queryClient.clear();
       queryClient.setQueryData(SESSION_KEY, sessionFromAccount(user));
@@ -64,7 +82,7 @@ export function AuthPage() {
 
   return (
     <div className="container-page flex min-h-[calc(100vh-4rem)] items-center justify-center py-10">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-soft">
+      <div className={`w-full rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-8 ${mode === "signup" ? "max-w-xl" : "max-w-md"}`}>
         <div className="mb-6 text-center">
           <Image src={logoMark} alt="Gratis Castle" className="mx-auto mb-3 h-12 w-auto" priority />
           <h1 className="text-2xl font-bold">{mode === "signin" ? "Welcome back" : "Join the community"}</h1>
@@ -75,9 +93,19 @@ export function AuthPage() {
 
         <form onSubmit={submit} className="space-y-4">
           {mode === "signup" && (
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Full name</Label>
-              <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ada Lovelace" autoComplete="name" required />
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="first-name">First name</Label>
+                <Input id="first-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Ada" autoComplete="given-name" minLength={2} maxLength={60} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="middle-name">Middle name <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Input id="middle-name" value={middleName} onChange={(e) => setMiddleName(e.target.value)} placeholder="Chiamaka" autoComplete="additional-name" maxLength={60} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="last-name">Surname</Label>
+                <Input id="last-name" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Okafor" autoComplete="family-name" minLength={2} maxLength={60} required />
+              </div>
             </div>
           )}
           <div className="space-y-1.5">
@@ -97,15 +125,24 @@ export function AuthPage() {
           {mode === "signup" && (
             <>
               <div className="space-y-1.5">
+                <Label htmlFor="phone">Phone number</Label>
+                <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0803 123 4567" autoComplete="tel" required />
+                <p className="text-xs text-muted-foreground">Private — used for pickups and deliveries. One account per phone number.</p>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="location">General area <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Yaba, Lagos" />
               </div>
+              <label className="flex items-start gap-2.5 rounded-xl border border-border bg-muted/40 p-3 text-sm">
+                <Checkbox checked={adult} onCheckedChange={(v) => setAdult(v === true)} className="mt-0.5" aria-required="true" />
+                <span><strong>I confirm I am 18 years or older.</strong> <span className="text-muted-foreground">Gratis Castle is for adults only, and each person may have only one account.</span></span>
+              </label>
               <p className="text-xs text-muted-foreground">
                 By joining you agree to our <Link href="/community-guidelines" className="text-primary hover:underline">community guidelines</Link>, <Link href="/terms" className="text-primary hover:underline">terms</Link> and <Link href="/privacy" className="text-primary hover:underline">privacy policy</Link> — including that items are never sold.
               </p>
             </>
           )}
-          <Button type="submit" className="w-full" size="lg" disabled={busy}>
+          <Button type="submit" className="w-full" size="lg" disabled={busy || (mode === "signup" && !adult)}>
             {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </Button>
         </form>

@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, CircleAlert, MailCheck, PackageX, Pencil } from "lucide-react";
+import { ArrowLeft, CalendarClock, MailCheck, PackageCheck, PackageX, Pencil, Receipt } from "lucide-react";
 import { RequestCheckout } from "@/components/request/request-checkout";
 import { Button } from "@/components/ui/button";
-import { REQUEST_STATUS_LABELS } from "@/lib/gapcastle";
 import { ServerApiError, getListing, getStates, getViewer } from "@/lib/server/api";
 import { listingPath } from "@/lib/site";
 import type { Listing, NgState } from "@/lib/types";
 
 /**
- * The request "checkout" page. It checks on the server whether the member can
- * request this item (signed in, verified, not their own, still available) before
- * showing the form; the API enforces the same rules again on submit.
+ * The free checkout page. It checks on the server whether the member can get
+ * this item (signed in, verified, not their own, still available, within the
+ * monthly limit) before showing the form; the API enforces the same rules again.
  */
 export async function RequestCheckoutPage({ slug }: { slug: string }) {
   const checkoutPath = `${listingPath(slug)}/request`;
@@ -30,27 +29,29 @@ export async function RequestCheckoutPage({ slug }: { slug: string }) {
   }
 
   const itemPath = listingPath(listing.slug || listing.id);
-  const activeRequest = listing.viewer_request && listing.viewer_request.status !== "cancelled" ? listing.viewer_request : null;
+  const myOrder = listing.viewer_request && ["accepted", "completed"].includes(listing.viewer_request.status) ? listing.viewer_request : null;
+  const account = viewer.data;
 
   if (listing.is_owner) {
     return (
-      <Blocked icon={Pencil} title="This is your listing" text="You can't request your own item — but you can manage it and review requests from others." itemPath={itemPath}>
+      <Blocked icon={Pencil} title="This is your listing" text="You can't get your own item — but you can manage it and follow its handover." itemPath={itemPath}>
         <Button asChild><Link href={`/account/listings?listing=${listing.id}`}>Manage listing</Link></Button>
       </Blocked>
     );
   }
 
-  if (activeRequest) {
+  if (myOrder) {
     return (
-      <Blocked icon={CircleAlert} title={`You've already requested this item`} text={`Status: ${REQUEST_STATUS_LABELS[activeRequest.status]}. We'll notify you as soon as the giver responds.`} itemPath={itemPath}>
-        <Button asChild><Link href="/account/requests">View my requests</Link></Button>
+      <Blocked icon={Receipt} title="This item is already yours" text="You've placed an order for this item. Track it and confirm when you receive it in your orders." itemPath={itemPath}>
+        <Button asChild><Link href={`/account/requests?order=${myOrder.id}`}>View my order</Link></Button>
       </Blocked>
     );
   }
 
   if (!listing.is_requestable) {
+    const gone = listing.status === "reserved" || listing.status === "given_away";
     return (
-      <Blocked icon={PackageX} title="This item is no longer available" text="Someone else may have been chosen, or the giver has paused it. There are plenty more good things to discover." itemPath={itemPath}>
+      <Blocked icon={gone ? PackageCheck : PackageX} title={gone ? "This item has been given away" : "This item is not available"} text={gone ? "Someone checked it out first. There are plenty more free items to discover." : "The giver has paused it or it's waiting for review. There are plenty more good things to discover."} itemPath={itemPath}>
         <Button asChild><Link href="/explore">Explore free items</Link></Button>
       </Blocked>
     );
@@ -58,8 +59,16 @@ export async function RequestCheckoutPage({ slug }: { slug: string }) {
 
   if (!viewer.data.email_verified) {
     return (
-      <Blocked icon={MailCheck} title="Please verify your email first" text="For everyone's safety, only verified members can request items. Confirm your email with the 6-digit code we send you — it only takes a moment." itemPath={itemPath}>
+      <Blocked icon={MailCheck} title="Please verify your email first" text="For everyone's safety, only verified members can get items. Confirm your email with the 6-digit code we send you — it only takes a moment." itemPath={itemPath}>
         <Button asChild><Link href={`/verify-email?next=${encodeURIComponent(`${itemPath}/request`)}`}>Verify my email</Link></Button>
+      </Blocked>
+    );
+  }
+
+  if (account.claims.this_month >= account.claims.monthly_limit) {
+    return (
+      <Blocked icon={CalendarClock} title="You've reached this month's limit" text={`To keep things fair, each member can get up to ${account.claims.monthly_limit} free items a month. You can get more from the 1st of next month — save this item in the meantime.`} itemPath={itemPath}>
+        <Button asChild><Link href="/account/requests">View my orders</Link></Button>
       </Blocked>
     );
   }
@@ -78,8 +87,15 @@ export async function RequestCheckoutPage({ slug }: { slug: string }) {
         giverName: listing.giver?.name ?? "the giver",
       }}
       states={states}
-      defaultStateId={viewer.data.state?.id ?? null}
-      defaultPhone={viewer.data.phone ?? ""}
+      defaults={{
+        name: [account.first_name, account.last_name].filter(Boolean).join(" ") || account.name,
+        email: account.email,
+        phone: account.phone ?? "",
+        stateId: account.state?.id ?? null,
+        safetyAcknowledged: account.safety_acknowledged,
+        claimsThisMonth: account.claims.this_month,
+        monthlyLimit: account.claims.monthly_limit,
+      }}
     />
   );
 }

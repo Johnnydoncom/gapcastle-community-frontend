@@ -83,3 +83,40 @@ function CountUp({ value, run }: { value: number; run: boolean }) {
 
   return <>{new Intl.NumberFormat("en-NG").format(display)}</>;
 }
+
+/**
+ * The same live figures as compact tiles for the dark community band on the
+ * homepage. Numbers are in the server HTML; the count-up runs once in view.
+ */
+export function ImpactStatsGrid({ stats }: { stats: CommunityStats }) {
+  const ref = useRef<HTMLDListElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.3 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <dl ref={ref} className="grid grid-cols-2 gap-3">
+      {STATS.map(({ key, label, icon: Icon }) => (
+        <div key={key} className="rounded-2xl bg-white/[0.07] p-4 ring-1 ring-white/10 backdrop-blur">
+          <dt className="flex items-center gap-2 text-xs font-medium text-primary-100">
+            <Icon className="size-4 text-brand-yellow-300" /> {label}
+          </dt>
+          <dd className="mt-2 text-3xl font-extrabold tabular-nums text-white sm:text-4xl">
+            <CountUp value={stats[key]} run={visible} />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}

@@ -52,6 +52,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    // "Home & Kitchen" was split into "Home & Living" and "Kitchen & Dining" (2026-11-23).
+    return [{ source: "/categories/home-kitchen", destination: "/categories/home-living", permanent: true }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

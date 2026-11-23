@@ -60,15 +60,24 @@ function ProfileForm({ user }: { user: Account }) {
   const updateAccount = useAccountUpdate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    name: user.name,
+    first_name: user.first_name ?? user.name.split(" ")[0] ?? "",
+    middle_name: user.middle_name ?? "",
+    last_name: user.last_name ?? "",
     bio: user.bio ?? "",
     location: user.location ?? "",
     state_id: user.state?.id ? String(user.state.id) : "",
+    lga_id: user.lga?.id ? String(user.lga.id) : "",
     phone: user.phone ?? "",
     contact_preference: user.contact_preference,
   });
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const { data: lgas, isFetching: loadingLgas } = useQuery({
+    queryKey: ["lgas", form.state_id],
+    queryFn: async () => (await api.get<{ data: { id: number; name: string }[] }>(`states/${form.state_id}/lgas`)).data,
+    staleTime: 60 * 60_000,
+    enabled: !!form.state_id,
+  });
   const { data: states } = useQuery({
     queryKey: ["states"],
     queryFn: () => api.get<{ data: NgState[] }>("states").then((response) => response.data),
@@ -81,9 +90,11 @@ function ProfileForm({ user }: { user: Account }) {
     try {
       const response = await api.patch<{ data: Account; message: string }>("me/profile", {
         ...form,
+        middle_name: form.middle_name.trim() || null,
         bio: form.bio || null,
         location: form.location || null,
         state_id: form.state_id ? Number(form.state_id) : null,
+        lga_id: form.lga_id ? Number(form.lga_id) : null,
         phone: form.phone || null,
       });
       updateAccount(response.data);
@@ -131,23 +142,41 @@ function ProfileForm({ user }: { user: Account }) {
         </div>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => uploadAvatar(e.target.files?.[0])} />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="s-name">Full name</Label>
-          <Input id="s-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={80} />
+          <Label htmlFor="s-first">First name</Label>
+          <Input id="s-first" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} required minLength={2} maxLength={60} autoComplete="given-name" />
         </div>
         <div className="space-y-1.5">
+          <Label htmlFor="s-middle">Middle name <span className="font-normal text-muted-foreground">(optional)</span></Label>
+          <Input id="s-middle" value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })} maxLength={60} autoComplete="additional-name" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="s-last">Surname</Label>
+          <Input id="s-last" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} required minLength={2} maxLength={60} autoComplete="family-name" />
+        </div>
+      </div>
+      <p className="-mt-2 text-xs text-muted-foreground">Members see your first name and surname. Your middle name stays private.</p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="s-location">General area</Label>
           <Input id="s-location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="e.g. Yaba, Lagos" maxLength={120} />
         </div>
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <Label htmlFor="s-state">State</Label>
-          <Select id="s-state" value={form.state_id} onChange={(e) => setForm({ ...form, state_id: e.target.value })}>
+          <Select id="s-state" value={form.state_id} onChange={(e) => setForm({ ...form, state_id: e.target.value, lga_id: "" })}>
             <option value="">Choose your state…</option>
-            {states?.map((state) => <option key={state.id} value={state.id}>{state.name}{state.pickup_available ? " — pickup hubs" : ""}</option>)}
+            {states?.map((state) => <option key={state.id} value={state.id}>{state.name}{state.pickup_available ? " — pickup hub" : ""}</option>)}
           </Select>
-          <p className="text-xs text-muted-foreground">Used to show you the pickup hubs in your state when you request items.</p>
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="s-lga">LGA</Label>
+          <Select id="s-lga" value={form.lga_id} onChange={(e) => setForm({ ...form, lga_id: e.target.value })} disabled={!form.state_id || loadingLgas}>
+            <option value="">{!form.state_id ? "Choose a state first" : loadingLgas ? "Loading…" : "Choose your LGA…"}</option>
+            {(lgas ?? []).map((lga) => <option key={lga.id} value={lga.id}>{lga.name}</option>)}
+          </Select>
+        </div>
+        <p className="-mt-2 text-xs text-muted-foreground sm:col-span-2">Used to show free items near you first and to suggest pickup or delivery at checkout. Only your area is used — never your address.</p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="s-bio">Bio</Label>
@@ -156,7 +185,7 @@ function ProfileForm({ user }: { user: Account }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="s-phone">Phone (private)</Label>
-          <Input id="s-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+234…" />
+          <Input id="s-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="0803 123 4567" />
           <p className="text-xs text-muted-foreground">{user.phone ? (user.phone_verified ? "Verified" : "Not verified yet") : "Never shown publicly."}</p>
         </div>
         <div className="space-y-1.5">

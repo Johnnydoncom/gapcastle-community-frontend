@@ -1,14 +1,15 @@
 "use client";
-import Image from "next/image";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, Check, CheckCircle2, Clock, Info, Loader2, MapPin, MessageCircle, Package, Phone, Send, ShieldCheck, Truck } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Clock, Info, Loader2, Lock, MapPin, Package, Phone, Receipt, ShieldAlert, ShieldCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
-import { MeetupSafetyWarning } from "@/components/safety/meetup-safety-warning";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/form-fields";
+import { Checkbox } from "@/components/ui/toggles";
 import { ApiError, api } from "@/lib/api";
+import { NO_HIDDEN_FEE, SAFETY_NOTICE } from "@/lib/content";
 import type { ItemRequest, NgState } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -22,66 +23,78 @@ type Summary = {
   giverName: string;
 };
 
+type Defaults = {
+  name: string;
+  email: string;
+  phone: string;
+  stateId: number | null;
+  safetyAcknowledged: boolean;
+  claimsThisMonth: number;
+  monthlyLimit: number;
+};
+
 type Method = "pickup" | "delivery";
 type Errors = Record<string, string | undefined>;
 
+const PHONE_PATTERN = /^(\+?234|0)[789][01]\d{8}$/;
+const normalisePhone = (value: string) => value.replace(/[\s\-().]/g, "");
+
 /**
- * Request checkout. Nigeria only: the receiver picks their state; if it has an
- * active Gratis Castle pickup hub they can collect there, otherwise pickup is
- * disabled and waybill/delivery is offered. Submits through the Next.js API
- * route proxy (/api/backend) — no server actions.
+ * The free checkout. Works like a normal e-commerce checkout — contact details,
+ * pickup or delivery, review and agree — except the item and the delivery cost ₦0.
+ * There is no approval step: placing the order claims the item. Nigeria only;
+ * pickup is offered at Gratis Castle hubs in the member's state.
  */
-export function RequestCheckout({
-  listing,
-  states,
-  defaultStateId,
-  defaultPhone,
-}: {
-  listing: Summary;
-  states: NgState[];
-  defaultStateId: number | null;
-  defaultPhone: string;
-}) {
+export function RequestCheckout({ listing, states, defaults }: { listing: Summary; states: NgState[]; defaults: Defaults }) {
   const sortedStates = useMemo(
     () => [...states].sort((a, b) => Number(b.pickup_available) - Number(a.pickup_available) || a.name.localeCompare(b.name)),
     [states],
   );
-  const initialState = states.find((state) => state.id === defaultStateId) ?? null;
+  const initialState = states.find((state) => state.id === defaults.stateId) ?? null;
 
   const [stateId, setStateId] = useState<number | null>(initialState?.id ?? null);
   const [method, setMethod] = useState<Method | null>(initialState ? (initialState.pickup_available ? "pickup" : "delivery") : null);
   const [hubId, setHubId] = useState<number | null>(initialState?.pickup_available ? initialState.pickup_locations[0]?.id ?? null : null);
-  const [phone, setPhone] = useState(defaultPhone);
-  const [city, setCity] = useState("");
-  const [address, setAddress] = useState("");
-  const [introduction, setIntroduction] = useState("");
-  const [reason, setReason] = useState("");
-  const [arrangement, setArrangement] = useState("");
+  const [contact, setContact] = useState({ name: defaults.name, email: defaults.email, phone: defaults.phone, altPhone: "" });
+  const [address, setAddress] = useState({ street: "", city: "", landmark: "", notes: "" });
+  const [bestTime, setBestTime] = useState("");
+  const [message, setMessage] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [safetyAcknowledged, setSafetyAcknowledged] = useState(defaults.safetyAcknowledged);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState<ItemRequest | null>(null);
+  const [order, setOrder] = useState<ItemRequest | null>(null);
 
   const state = states.find((item) => item.id === stateId) ?? null;
   const hubs = state?.pickup_available ? state.pickup_locations : [];
   const hub = hubs.find((item) => item.id === hubId) ?? null;
+  const remaining = Math.max(0, defaults.monthlyLimit - defaults.claimsThisMonth);
+
+  function clearError(...keys: string[]) {
+    setErrors((current) => ({ ...current, ...Object.fromEntries(keys.map((key) => [key, undefined])) }));
+  }
 
   function chooseState(value: string) {
     const next = states.find((item) => item.id === Number(value)) ?? null;
     setStateId(next?.id ?? null);
     setMethod(next ? (next.pickup_available ? "pickup" : "delivery") : null);
     setHubId(next?.pickup_available ? next.pickup_locations[0]?.id ?? null : null);
-    setErrors((current) => ({ ...current, state_id: undefined, fulfillment_method: undefined, pickup_location_id: undefined }));
+    clearError("state_id", "fulfillment_method", "pickup_location_id");
   }
 
   function validate(): Errors {
     const found: Errors = {};
+    if (contact.name.trim().length < 3) found.recipient_name = "Please enter the receiver's full name.";
+    if (!/^\S+@\S+\.\S+$/.test(contact.email.trim())) found.recipient_email = "Please enter a valid email address for order updates.";
+    if (!PHONE_PATTERN.test(normalisePhone(contact.phone))) found.recipient_phone = "Please enter a valid Nigerian mobile number, e.g. 0803 123 4567.";
+    if (contact.altPhone.trim() && !PHONE_PATTERN.test(normalisePhone(contact.altPhone))) found.recipient_alt_phone = "Please enter a valid Nigerian mobile number, or leave it blank.";
     if (!stateId) found.state_id = "Please choose your state.";
-    if (!method) found.fulfillment_method = "Please choose how you'll receive the item.";
+    if (!method) found.fulfillment_method = "Please choose pickup or delivery.";
     if (method === "pickup" && !hubId) found.pickup_location_id = "Please choose a pickup hub.";
-    if (!/^(\+?234|0)[789]\d{9}$/.test(phone.replace(/[\s\-()]/g, ""))) found.recipient_phone = "Please enter a valid Nigerian phone number, e.g. 0803 123 4567.";
-    if (method === "delivery" && city.trim().length < 2) found.delivery_city = "Please add your city or LGA.";
-    if (method === "delivery" && address.trim().length < 10) found.delivery_address = "Please add the delivery address for the waybill.";
-    if (introduction.trim().length < 10) found.introduction = "Please write a short introduction (at least 10 characters).";
+    if (method === "delivery" && address.street.trim().length < 10) found.delivery_address = "Please add your full delivery address (house number, street and area).";
+    if (method === "delivery" && address.city.trim().length < 2) found.delivery_city = "Please add your city or LGA.";
+    if (!safetyAcknowledged) found.safety_acknowledged = "Please read and acknowledge the safety notice.";
+    if (!termsAccepted) found.terms_accepted = "Please accept the terms to place your order.";
     return found;
   }
 
@@ -90,90 +103,119 @@ export function RequestCheckout({
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length) {
-      const first = Object.keys(found)[0];
-      document.getElementById(`field-${first}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById(`field-${Object.keys(found)[0]}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      toast.error("Please check the highlighted fields");
       return;
     }
 
     setBusy(true);
     try {
-      const response = await api.post<{ data: ItemRequest }>(`listings/${listing.id}/requests`, {
-        introduction: introduction.trim(),
-        reason: reason.trim() || null,
+      const response = await api.post<{ data: ItemRequest; message: string }>(`listings/${listing.id}/requests`, {
+        recipient_name: contact.name.trim(),
+        recipient_email: contact.email.trim(),
+        recipient_phone: contact.phone,
+        recipient_alt_phone: contact.altPhone.trim() || null,
         state_id: stateId,
         fulfillment_method: method,
         pickup_location_id: method === "pickup" ? hubId : null,
-        recipient_phone: phone,
-        delivery_city: method === "delivery" ? city.trim() : null,
-        delivery_address: method === "delivery" ? address.trim() : null,
-        preferred_arrangement: arrangement.trim() || null,
+        delivery_address: method === "delivery" ? address.street.trim() : null,
+        delivery_city: method === "delivery" ? address.city.trim() : null,
+        delivery_landmark: method === "delivery" ? address.landmark.trim() || null : null,
+        delivery_notes: method === "delivery" ? address.notes.trim() || null : null,
+        preferred_arrangement: bestTime.trim() || null,
+        introduction: message.trim() || null,
+        terms_accepted: termsAccepted,
+        safety_acknowledged: safetyAcknowledged,
       });
-      setSent(response.data);
+      setOrder(response.data);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.errors).length) {
         setErrors(Object.fromEntries(Object.entries(err.errors).map(([key, messages]) => [key, messages[0]])));
         toast.error("Please check the highlighted fields");
       } else {
-        toast.error(err instanceof Error ? err.message : "Could not send your request");
+        toast.error(err instanceof Error ? err.message : "Could not place your order");
       }
     } finally {
       setBusy(false);
     }
   }
 
-  if (sent) {
-    return <SuccessScreen listing={listing} request={sent} hubName={hub?.name ?? null} />;
+  if (order) {
+    return <OrderConfirmation listing={listing} order={order} hubName={hub ? `${hub.name}, ${hub.area}` : null} />;
   }
 
-  const collectionLabel = method === "pickup" ? (hub ? `${hub.name}, ${hub.area}` : "Pickup hub") : method === "delivery" ? "Waybill / delivery" : "Not chosen yet";
+  const collectionLabel = method === "pickup" ? (hub ? `${hub.name}, ${hub.area}` : "Pickup hub") : method === "delivery" ? "Free delivery" : "Not chosen yet";
+  const contactDone = contact.name.trim().length >= 3 && PHONE_PATTERN.test(normalisePhone(contact.phone)) && /^\S+@\S+\.\S+$/.test(contact.email);
+  const collectionDone = !!method && (method === "delivery" ? address.street.trim().length >= 10 && address.city.trim().length >= 2 : !!hubId);
 
   return (
-    <form onSubmit={submit} noValidate className="container-page pb-32 pt-4 sm:pb-12 sm:pt-6">
+    <form onSubmit={submit} noValidate className="container-page pb-36 pt-4 sm:pb-12 sm:pt-6">
       <Link href={listing.path} className="mb-3 hidden items-center gap-1.5 text-sm text-muted-foreground hover:text-primary sm:inline-flex">
         <ArrowLeft className="size-4" /> Back to item
       </Link>
-      <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Request this item</h1>
-      <p className="mt-1 text-sm text-muted-foreground">It&apos;s free — always. Tell {listing.giverName} a little about you and how you&apos;d like to receive it.</p>
+      <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Checkout</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        The item is free and so is delivery. Once you place your order, it&apos;s yours — no waiting for approval.{" "}
+        <span className="font-semibold text-foreground">{remaining} of {defaults.monthlyLimit}</span> free items left for you this month.
+      </p>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <div className="space-y-4">
           <ItemSummary listing={listing} className="lg:hidden" />
 
-          <Step number={1} title="Where are you?" done={!!state}>
-            <div id="field-state_id" className="space-y-1.5">
-              <Label htmlFor="state">Your state</Label>
-              <Select id="state" value={stateId ?? ""} onChange={(event) => chooseState(event.target.value)} aria-invalid={!!errors.state_id} className="h-12 text-base sm:text-sm">
+          <Step number={1} title="Contact details" done={contactDone}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="recipient_name" label="Full name of receiver" error={errors.recipient_name} className="sm:col-span-2">
+                <Input id="field-recipient_name" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); clearError("recipient_name"); }} autoComplete="name" maxLength={120} placeholder="First and last name" aria-invalid={!!errors.recipient_name} className="h-12 text-base sm:text-sm" />
+              </Field>
+              <Field id="recipient_email" label="Email address" error={errors.recipient_email}>
+                <Input id="field-recipient_email" type="email" inputMode="email" value={contact.email} onChange={(e) => { setContact({ ...contact, email: e.target.value }); clearError("recipient_email"); }} autoComplete="email" maxLength={200} aria-invalid={!!errors.recipient_email} className="h-12 text-base sm:text-sm" />
+              </Field>
+              <Field id="recipient_phone" label="Phone number" error={errors.recipient_phone}>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="field-recipient_phone" type="tel" inputMode="tel" autoComplete="tel" value={contact.phone} onChange={(e) => { setContact({ ...contact, phone: e.target.value }); clearError("recipient_phone"); }} placeholder="0803 123 4567" aria-invalid={!!errors.recipient_phone} className="h-12 pl-10 text-base sm:text-sm" />
+                </div>
+              </Field>
+              <Field id="recipient_alt_phone" label="Alternative phone" optional error={errors.recipient_alt_phone}>
+                <Input id="field-recipient_alt_phone" type="tel" inputMode="tel" value={contact.altPhone} onChange={(e) => { setContact({ ...contact, altPhone: e.target.value }); clearError("recipient_alt_phone"); }} placeholder="Another number we can reach you on" className="h-12 text-base sm:text-sm" />
+              </Field>
+            </div>
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><Lock className="size-3.5 text-success" /> Private — only the Gratis Castle team sees these details, never the giver.</p>
+          </Step>
+
+          <Step number={2} title="Pickup or delivery" done={collectionDone}>
+            <Field id="state_id" label="Your state" error={errors.state_id}>
+              <Select id="field-state_id" value={stateId ?? ""} onChange={(event) => chooseState(event.target.value)} aria-invalid={!!errors.state_id} className="h-12 text-base sm:text-sm">
                 <option value="" disabled>Choose your state…</option>
-                <optgroup label="States with pickup hubs">
+                <optgroup label="With a Gratis Castle pickup hub">
                   {sortedStates.filter((item) => item.pickup_available).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </optgroup>
-                <optgroup label="Other states — waybill delivery">
+                <optgroup label="Other states — free delivery">
                   {sortedStates.filter((item) => !item.pickup_available).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </optgroup>
               </Select>
-              <FieldError message={errors.state_id} />
-              <p className="text-xs text-muted-foreground">We only serve Nigeria. We&apos;ll remember your state for next time.</p>
-            </div>
-          </Step>
+            </Field>
 
-          <Step number={2} title="How will you receive it?" done={!!method && (method === "delivery" || !!hubId)} disabled={!state}>
-            <div id="field-fulfillment_method" role="radiogroup" aria-label="Collection method" className="grid gap-3 sm:grid-cols-2">
+            <div id="field-fulfillment_method" role="radiogroup" aria-label="Pickup or delivery" className="mt-4 grid gap-3 sm:grid-cols-2">
               <MethodCard
                 selected={method === "pickup"}
                 disabled={!state?.pickup_available}
-                onSelect={() => { setMethod("pickup"); setHubId(hubs[0]?.id ?? null); }}
+                onSelect={() => { setMethod("pickup"); setHubId(hubs[0]?.id ?? null); clearError("fulfillment_method"); }}
                 icon={MapPin}
-                title="Pickup hub"
-                text={state?.pickup_available ? `Collect free from a Gratis Castle hub in ${state.name}.` : state ? `No pickup hub in ${state.name} yet.` : "Choose your state first."}
+                title="Pick up at our hub"
+                badge="₦0"
+                text={state?.pickup_available ? `Collect from a Gratis Castle hub in ${state.name}.` : state ? `No pickup hub in ${state.name} yet.` : "Choose your state first."}
               />
               <MethodCard
                 selected={method === "delivery"}
                 disabled={!state}
-                onSelect={() => setMethod("delivery")}
+                onSelect={() => { setMethod("delivery"); clearError("fulfillment_method"); }}
                 icon={Truck}
-                title="Waybill / delivery"
-                text="Sent to you anywhere in Nigeria. Any waybill cost is separate."
+                title="Deliver to me"
+                badge="Free"
+                text="Delivered to your address anywhere in Nigeria at no cost."
               />
             </div>
             <FieldError message={errors.fulfillment_method} />
@@ -205,88 +247,86 @@ export function RequestCheckout({
                 {state && !state.pickup_available && (
                   <p className="flex gap-2 rounded-xl bg-muted px-3.5 py-3 text-xs text-muted-foreground">
                     <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-                    There&apos;s no Gratis Castle pickup hub in {state.name} yet, so this item will come to you by waybill.
+                    There&apos;s no Gratis Castle pickup hub in {state.name} yet, so we&apos;ll deliver to you — free of charge.
                   </p>
                 )}
-                <MeetupSafetyWarning defaultOpen />
-
-                <div id="field-delivery_city" className="space-y-1.5">
-                  <Label htmlFor="city">City / LGA</Label>
-                  <Input id="city" value={city} onChange={(event) => setCity(event.target.value)} placeholder="e.g. Port Harcourt" maxLength={120} autoComplete="address-level2" aria-invalid={!!errors.delivery_city} className="h-12 text-base sm:text-sm" />
-                  <FieldError message={errors.delivery_city} />
+                <Field id="delivery_address" label="Delivery address" error={errors.delivery_address}>
+                  <Textarea id="field-delivery_address" value={address.street} onChange={(e) => { setAddress({ ...address, street: e.target.value }); clearError("delivery_address"); }} rows={2} maxLength={500} autoComplete="street-address" placeholder="House number, street and area" aria-invalid={!!errors.delivery_address} className="text-base sm:text-sm" />
+                </Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field id="delivery_city" label="City / LGA" error={errors.delivery_city}>
+                    <Input id="field-delivery_city" value={address.city} onChange={(e) => { setAddress({ ...address, city: e.target.value }); clearError("delivery_city"); }} maxLength={120} autoComplete="address-level2" placeholder="e.g. Port Harcourt" aria-invalid={!!errors.delivery_city} className="h-12 text-base sm:text-sm" />
+                  </Field>
+                  <Field id="delivery_landmark" label="Nearest landmark" optional>
+                    <Input id="field-delivery_landmark" value={address.landmark} onChange={(e) => setAddress({ ...address, landmark: e.target.value })} maxLength={160} placeholder="e.g. Opposite the First Bank" className="h-12 text-base sm:text-sm" />
+                  </Field>
                 </div>
-                <div id="field-delivery_address" className="space-y-1.5">
-                  <Label htmlFor="address">Delivery address or waybill park</Label>
-                  <Textarea id="address" value={address} onChange={(event) => setAddress(event.target.value)} rows={3} maxLength={500} autoComplete="street-address" placeholder="Street, area and a nearby landmark — or the motor park where you'll collect the waybill" aria-invalid={!!errors.delivery_address} className="text-base sm:text-sm" />
-                  <FieldError message={errors.delivery_address} />
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5 text-success" /> Private — only the Gratis Castle team sees this, never the giver.</p>
-                </div>
+                <Field id="delivery_notes" label="Delivery instructions" optional>
+                  <Input id="field-delivery_notes" value={address.notes} onChange={(e) => setAddress({ ...address, notes: e.target.value })} maxLength={500} placeholder="e.g. Call when you reach the estate gate" className="h-12 text-base sm:text-sm" />
+                </Field>
               </div>
             )}
           </Step>
 
-          <Step number={3} title="Your contact number" done={phone.replace(/\D/g, "").length >= 11}>
-            <div id="field-recipient_phone" className="space-y-1.5">
-              <Label htmlFor="phone">Phone number</Label>
-              <div className="relative">
-                <Phone className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="phone" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="0803 123 4567" aria-invalid={!!errors.recipient_phone} className="h-12 pl-10 text-base sm:text-sm" />
-              </div>
-              <FieldError message={errors.recipient_phone} />
-              <p className="text-xs text-muted-foreground">Used by the Gratis Castle hub or courier to reach you. Never shown to the giver.</p>
+          <Step number={3} title="A few extras" optional done={false}>
+            <div className="space-y-4">
+              <Field id="preferred_arrangement" label="Best time to reach you" optional>
+                <Input id="field-preferred_arrangement" value={bestTime} onChange={(e) => setBestTime(e.target.value)} maxLength={500} placeholder="e.g. Weekdays after 4pm" className="h-12 text-base sm:text-sm" />
+              </Field>
+              <Field id="introduction" label={`A thank-you note to ${listing.giverName}`} optional>
+                <Textarea id="field-introduction" value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={1000} placeholder="Givers love hearing how their item will be used." className="text-base sm:text-sm" />
+              </Field>
             </div>
           </Step>
 
-          <Step number={4} title={`Say hello to ${listing.giverName}`} done={introduction.trim().length >= 10}>
-            <div className="space-y-4">
-              <div id="field-introduction" className="space-y-1.5">
-                <Label htmlFor="intro">A short introduction</Label>
-                <Textarea id="intro" value={introduction} onChange={(event) => setIntroduction(event.target.value)} rows={3} maxLength={1000} placeholder="Hi! I'm a student in Yaba and this would really help me…" aria-invalid={!!errors.introduction} className="text-base sm:text-sm" />
-                <div className="flex justify-between gap-2"><FieldError message={errors.introduction} /><span className="ml-auto text-xs text-muted-foreground">{introduction.length}/1000</span></div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="reason">Why you&apos;d like it <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                <Textarea id="reason" value={reason} onChange={(event) => setReason(event.target.value)} rows={2} maxLength={1000} placeholder="Share as much or as little as you like" className="min-h-16 text-base sm:text-sm" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="arrangement">Best time to collect <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                <Input id="arrangement" value={arrangement} onChange={(event) => setArrangement(event.target.value)} maxLength={500} placeholder="e.g. Weekday afternoons" className="h-12 text-base sm:text-sm" />
-              </div>
+          <Step number={4} title="Review and agree" done={termsAccepted && safetyAcknowledged}>
+            <div className="space-y-3">
+              {!defaults.safetyAcknowledged && <SafetyNotice />}
+              {!defaults.safetyAcknowledged && (
+                <Agreement id="field-safety_acknowledged" checked={safetyAcknowledged} onChange={(value) => { setSafetyAcknowledged(value); clearError("safety_acknowledged"); }} error={errors.safety_acknowledged}>
+                  I have read the safety notice. I will never pay anyone to reserve, release or deliver an item.
+                </Agreement>
+              )}
+              <Agreement id="field-terms_accepted" checked={termsAccepted} onChange={(value) => { setTermsAccepted(value); clearError("terms_accepted"); }} error={errors.terms_accepted}>
+                I am 18 or older and agree to the <Link href="/terms" target="_blank" className="font-semibold text-primary hover:underline">terms</Link> and{" "}
+                <Link href="/community-guidelines" target="_blank" className="font-semibold text-primary hover:underline">community guidelines</Link>. I understand each member can get up to {defaults.monthlyLimit} items a month.
+              </Agreement>
             </div>
           </Step>
         </div>
 
-        {/* Summary */}
+        {/* Order summary */}
         <aside className="hidden lg:sticky lg:top-36 lg:block">
           <div className="rounded-3xl border border-border bg-card p-5 shadow-soft">
-            <ItemSummary listing={listing} plain />
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Order summary</p>
+            <ItemSummary listing={listing} plain className="mt-3" />
             <dl className="mt-5 space-y-2.5 border-t border-border pt-4 text-sm">
-              <Row label="Item" value={<span className="font-extrabold text-primary">Free</span>} />
-              <Row label="State" value={state?.name ?? "—"} />
-              <Row label="Collection" value={collectionLabel} />
-              {method === "delivery" && <Row label="Waybill cost" value="Agreed separately" muted />}
+              <Row label="Item" value="₦0" />
+              <Row label={method === "pickup" ? "Hub pickup" : "Delivery"} value="₦0" />
+              <Row label="Collection" value={collectionLabel} muted />
+              <Row label="State" value={state?.name ?? "—"} muted />
             </dl>
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-highlight-soft px-4 py-3 text-highlight-soft-foreground">
-              <span className="text-sm font-semibold">You pay for the item</span>
-              <span className="text-xl font-extrabold">₦0</span>
+              <span className="text-sm font-semibold">Total</span>
+              <span className="text-2xl font-extrabold">₦0</span>
             </div>
             <Button type="submit" size="lg" className="mt-4 h-13 w-full rounded-xl text-base" disabled={busy}>
-              {busy ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-4" />} {busy ? "Sending…" : "Send request"}
+              {busy ? <Loader2 className="size-5 animate-spin" /> : <Receipt className="size-4" />} {busy ? "Placing order…" : "Place free order"}
             </Button>
-            <p className="mt-3 text-center text-xs text-muted-foreground">The giver chooses who receives. You can cancel any time before collection.</p>
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-success"><ShieldCheck className="size-3.5" /> {NO_HIDDEN_FEE}</p>
           </div>
         </aside>
       </div>
 
-      {/* Phone: sticky submit bar */}
+      {/* Phone: sticky order bar */}
       <div className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-float backdrop-blur lg:hidden">
         <div className="container-page flex items-center gap-3 py-2.5">
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="text-lg font-extrabold text-primary">Free</p>
-            <p className="truncate text-xs text-muted-foreground">{collectionLabel}</p>
+            <p className="text-lg font-extrabold text-primary">Total ₦0</p>
+            <p className="truncate text-xs text-muted-foreground">{collectionLabel} · {NO_HIDDEN_FEE}</p>
           </div>
-          <Button type="submit" size="lg" className="h-12 rounded-xl px-6 text-base" disabled={busy}>
-            {busy ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-4" />} {busy ? "Sending…" : "Send request"}
+          <Button type="submit" size="lg" className="h-12 rounded-xl px-5 text-base" disabled={busy}>
+            {busy ? <Loader2 className="size-5 animate-spin" /> : <Receipt className="size-4" />} {busy ? "Placing…" : "Place order"}
           </Button>
         </div>
       </div>
@@ -294,21 +334,58 @@ export function RequestCheckout({
   );
 }
 
-function Step({ number, title, done, disabled = false, children }: { number: number; title: string; done: boolean; disabled?: boolean; children: ReactNode }) {
+/** The reviewer-supplied "Stay safe while sharing" notice, shown before a member's first order. */
+export function SafetyNotice() {
   return (
-    <section className={cn("rounded-3xl border border-border bg-card p-4 transition-opacity sm:p-6", disabled && "pointer-events-none opacity-55")} inert={disabled}>
+    <div className="rounded-2xl border border-brand-yellow-300 bg-highlight-soft p-4 text-highlight-soft-foreground sm:p-5">
+      <p className="flex items-center gap-2 font-extrabold"><ShieldAlert className="size-5" /> {SAFETY_NOTICE.title}</p>
+      <p className="mt-2 text-sm opacity-90">{SAFETY_NOTICE.intro}</p>
+      <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm">
+        {SAFETY_NOTICE.points.map((point) => <li key={point}>{point}</li>)}
+      </ol>
+      <p className="mt-3 text-xs opacity-80">{SAFETY_NOTICE.outro}</p>
+    </div>
+  );
+}
+
+function Step({ number, title, done, optional = false, children }: { number: number; title: string; done: boolean; optional?: boolean; children: ReactNode }) {
+  return (
+    <section className="rounded-3xl border border-border bg-card p-4 sm:p-6">
       <h2 className="mb-4 flex items-center gap-3 text-base font-bold sm:text-lg">
         <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold transition-colors", done ? "bg-success text-white" : "bg-primary-50 text-primary")}>
           {done ? <Check className="size-4" strokeWidth={3} /> : number}
         </span>
         {title}
+        {optional && <span className="text-xs font-normal text-muted-foreground">(optional)</span>}
       </h2>
       {children}
     </section>
   );
 }
 
-function MethodCard({ selected, disabled, onSelect, icon: Icon, title, text }: { selected: boolean; disabled: boolean; onSelect: () => void; icon: typeof MapPin; title: string; text: string }) {
+function Field({ id, label, optional = false, error, className, children }: { id: string; label: string; optional?: boolean; error?: string; className?: string; children: ReactNode }) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label htmlFor={`field-${id}`}>{label}{optional && <span className="ml-1 font-normal text-muted-foreground">(optional)</span>}</Label>
+      {children}
+      <FieldError message={error} />
+    </div>
+  );
+}
+
+function Agreement({ id, checked, onChange, error, children }: { id: string; checked: boolean; onChange: (value: boolean) => void; error?: string; children: ReactNode }) {
+  return (
+    <div id={id}>
+      <label className={cn("flex items-start gap-3 rounded-xl border p-3.5 text-sm transition-colors", checked ? "border-success/40 bg-success-soft/40" : error ? "border-destructive/60" : "border-border")}>
+        <Checkbox checked={checked} onCheckedChange={(value) => onChange(value === true)} className="mt-0.5" />
+        <span className="text-muted-foreground">{children}</span>
+      </label>
+      <FieldError message={error} />
+    </div>
+  );
+}
+
+function MethodCard({ selected, disabled, onSelect, icon: Icon, title, badge, text }: { selected: boolean; disabled: boolean; onSelect: () => void; icon: typeof MapPin; title: string; badge: string; text: string }) {
   return (
     <button
       type="button"
@@ -326,7 +403,7 @@ function MethodCard({ selected, disabled, onSelect, icon: Icon, title, text }: {
         <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2 font-bold">{title} <RadioDot checked={selected} /></span>
+        <span className="flex items-center justify-between gap-2 font-bold">{title} <span className="rounded-md bg-success-soft px-1.5 py-0.5 text-[11px] font-extrabold text-success">{badge}</span></span>
         <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{text}</span>
       </span>
     </button>
@@ -345,11 +422,7 @@ function ItemSummary({ listing, className, plain = false }: { listing: Summary; 
   return (
     <Link href={listing.path} className={cn("flex items-center gap-3", !plain && "rounded-3xl border border-border bg-card p-3", className)}>
       <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-muted sm:size-20">
-        {listing.image ? (
-          <Image src={listing.image} alt="" fill sizes="80px" className="object-cover" />
-        ) : (
-          <Package className="absolute inset-0 m-auto size-7 text-primary-300" />
-        )}
+        {listing.image ? <Image src={listing.image} alt="" fill sizes="80px" className="object-cover" /> : <Package className="absolute inset-0 m-auto size-7 text-primary-300" />}
       </span>
       <span className="min-w-0 flex-1">
         <span className="rounded bg-highlight px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-highlight-foreground">FREE</span>
@@ -374,11 +447,13 @@ function FieldError({ message }: { message?: string }) {
   return <p role="alert" className="text-xs font-medium text-destructive">{message}</p>;
 }
 
-function SuccessScreen({ listing, request, hubName }: { listing: Summary; request: ItemRequest; hubName: string | null }) {
-  const steps = [
-    { title: "Request sent", text: `${listing.giverName} has been notified.`, done: true },
-    { title: "Giver reviews", text: "They choose who receives the item.", done: false },
-    { title: request.fulfillment_method === "pickup" ? "Collect at the hub" : "Waybill on its way", text: request.fulfillment_method === "pickup" ? `We'll confirm when it's ready at ${hubName ?? "your hub"}.` : "The Gratis Castle team arranges the waybill and shows you any cost first.", done: false },
+function OrderConfirmation({ listing, order, hubName }: { listing: Summary; order: ItemRequest; hubName: string | null }) {
+  const isPickup = order.fulfillment_method === "pickup";
+  const next = [
+    { title: "Order confirmed", text: `${listing.giverName} has been told the item is yours.`, done: true },
+    { title: "Giver hands it to Gratis Castle", text: "They drop it at our hub, or our dispatch rider collects it.", done: false },
+    { title: isPickup ? "Ready for collection" : "Out for delivery", text: isPickup ? `We'll tell you when it's waiting at ${hubName ?? "your hub"}. Bring a valid ID.` : "We deliver it to your address — free of charge.", done: false },
+    { title: "Confirm you received it", text: "Tap “I've received it” in your orders to complete the handover.", done: false },
   ];
 
   return (
@@ -387,11 +462,17 @@ function SuccessScreen({ listing, request, hubName }: { listing: Summary; reques
         <span className="mx-auto flex size-20 animate-fade-up items-center justify-center rounded-full bg-success-soft text-success">
           <CheckCircle2 className="size-11" strokeWidth={2} />
         </span>
-        <h1 className="mt-5 text-2xl font-extrabold sm:text-3xl">Request sent!</h1>
-        <p className="mt-2 text-muted-foreground">You asked for <strong className="text-foreground">{listing.title}</strong>. We&apos;ll let you know as soon as {listing.giverName} responds.</p>
+        <h1 className="mt-5 text-2xl font-extrabold sm:text-3xl">Order confirmed!</h1>
+        <p className="mt-2 text-muted-foreground"><strong className="text-foreground">{listing.title}</strong> is yours. Order number <strong className="text-foreground">{order.order_number}</strong>.</p>
 
-        <ol className="mt-8 space-y-3 text-left">
-          {steps.map((step, index) => (
+        <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-left text-sm">
+          <div className="flex justify-between"><span className="text-muted-foreground">Item</span><span className="font-semibold">₦0</span></div>
+          <div className="mt-1.5 flex justify-between"><span className="text-muted-foreground">{isPickup ? "Hub pickup" : "Delivery"}</span><span className="font-semibold">₦0</span></div>
+          <div className="mt-2 flex justify-between border-t border-border pt-2 font-extrabold"><span>Total paid</span><span>₦0</span></div>
+        </div>
+
+        <ol className="mt-6 space-y-3 text-left">
+          {next.map((step, index) => (
             <li key={step.title} className="flex gap-3 rounded-2xl border border-border bg-card p-4">
               <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold", step.done ? "bg-success text-white" : "bg-primary-50 text-primary")}>
                 {step.done ? <Check className="size-4" strokeWidth={3} /> : index + 1}
@@ -401,12 +482,10 @@ function SuccessScreen({ listing, request, hubName }: { listing: Summary; reques
           ))}
         </ol>
 
-        <div className="mt-8 grid gap-2.5 sm:grid-cols-2">
-          {request.conversation_id ? (
-            <Button asChild size="lg"><Link href={`/account/messages?conversationId=${request.conversation_id}`}><MessageCircle className="size-4" /> Open chat</Link></Button>
-          ) : (
-            <Button asChild size="lg"><Link href="/account/requests">View my requests</Link></Button>
-          )}
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-sm font-semibold text-success"><ShieldCheck className="size-4" /> {NO_HIDDEN_FEE} Never pay a rider or anyone else.</p>
+
+        <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+          <Button asChild size="lg"><Link href={`/account/requests?order=${order.id}`}><Receipt className="size-4" /> Track my order</Link></Button>
           <Button asChild size="lg" variant="outline"><Link href="/explore">Keep exploring</Link></Button>
         </div>
       </div>

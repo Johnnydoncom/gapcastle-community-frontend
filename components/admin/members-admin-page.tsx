@@ -20,13 +20,15 @@ import type { NgState } from "@/lib/types";
 
 type Role = "member" | "moderator" | "admin";
 type AdminUser = {
-  id: number; slug: string; name: string; email: string; avatar_url: string | null; role: Role;
+  id: number; slug: string; name: string; first_name: string | null; middle_name: string | null; last_name: string | null;
+  email: string; avatar_url: string | null; role: Role; adult_confirmed: boolean;
+  possible_duplicates: { id: number; name: string; slug: string | null; reason: string }[];
   email_verified: boolean; is_demo: boolean; suspended_at: string | null; suspension_reason: string | null;
   location: string | null; state_id: number | null; state: string | null; phone: string | null;
   listings_count: number; requests_count: number; created_at: string;
 };
 type Page = { data: AdminUser[]; meta: { current_page: number; last_page: number; total: number } };
-type FormState = { id?: number; name: string; email: string; password: string; role: Role; location: string; state_id: string; phone: string; email_verified: boolean };
+type FormState = { id?: number; first_name: string; middle_name: string; last_name: string; email: string; password: string; role: Role; location: string; state_id: string; phone: string; email_verified: boolean };
 
 const ROLE_LABEL: Record<Role, string> = { member: "Member", moderator: "Moderator", admin: "Administrator" };
 
@@ -69,7 +71,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
     }
   }
 
-  const blank: FormState = { name: "", email: "", password: "", role: scope === "staff" ? "moderator" : "member", location: "", state_id: "", phone: "", email_verified: true };
+  const blank: FormState = { first_name: "", middle_name: "", last_name: "", email: "", password: "", role: scope === "staff" ? "moderator" : "member", location: "", state_id: "", phone: "", email_verified: true };
   const title = scope === "staff" ? "Admins & moderators" : "Members";
 
   return (
@@ -89,6 +91,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
               <option value="members">Members only</option>
               <option value="unverified">Unverified email</option>
               <option value="suspended">Suspended</option>
+              <option value="duplicates">Possible duplicate accounts</option>
             </FilterSelect>
           )}
         </Toolbar>
@@ -118,6 +121,11 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
                   {member.suspended_at ? <Pill tone="red">Suspended</Pill> : <Pill tone="green">Active</Pill>}
                   {!member.email_verified && <Pill>Unverified</Pill>}
                   {member.is_demo && <Pill>Demo</Pill>}
+                  {member.possible_duplicates.length > 0 && (
+                    <span title={`Shares an IP address with: ${member.possible_duplicates.map((other) => other.name).join(", ")}. Review before acting — families and offices can share a connection.`}>
+                      <Pill tone="yellow">Possible duplicate ({member.possible_duplicates.length})</Pill>
+                    </span>
+                  )}
                 </div>
               </td>
               <td className="whitespace-nowrap text-muted-foreground">{timeAgo(member.created_at)}</td>
@@ -126,7 +134,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
                   { label: "View profile", icon: <ExternalLink className="size-4" />, onSelect: () => window.open(profilePath(member.slug), "_blank") },
                   {
                     label: "Edit", icon: <Pencil className="size-4" />, hidden: !isAdmin,
-                    onSelect: () => setForm({ id: member.id, name: member.name, email: member.email, password: "", role: member.role, location: member.location ?? "", state_id: member.state_id ? String(member.state_id) : "", phone: member.phone ?? "", email_verified: member.email_verified }),
+                    onSelect: () => setForm({ id: member.id, first_name: member.first_name ?? member.name.split(" ")[0] ?? "", middle_name: member.middle_name ?? "", last_name: member.last_name ?? "", email: member.email, password: "", role: member.role, location: member.location ?? "", state_id: member.state_id ? String(member.state_id) : "", phone: member.phone ?? "", email_verified: member.email_verified }),
                   },
                   member.suspended_at
                     ? { label: "Reinstate", icon: <RotateCcw className="size-4" />, onSelect: () => void setSuspended(member, false), hidden: member.id === me?.id || (member.role === "admin" && !isAdmin) }
@@ -182,7 +190,7 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
     if (!draft) return;
     setBusy(true);
     const payload = {
-      name: draft.name, email: draft.email, role: draft.role, location: draft.location || null,
+      first_name: draft.first_name.trim(), middle_name: draft.middle_name.trim() || null, last_name: draft.last_name.trim(), email: draft.email, role: draft.role, location: draft.location || null,
       state_id: draft.state_id ? Number(draft.state_id) : null, phone: draft.phone || null, email_verified: draft.email_verified,
       ...(draft.password ? { password: draft.password } : {}),
     };
@@ -207,7 +215,9 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name"><Input value={draft.name} onChange={set("name")} required minLength={2} maxLength={80} /></Field>
+            <Field label="First name"><Input value={draft.first_name} onChange={set("first_name")} required minLength={2} maxLength={60} /></Field>
+            <Field label="Middle name (optional)"><Input value={draft.middle_name} onChange={set("middle_name")} maxLength={60} /></Field>
+            <Field label="Surname"><Input value={draft.last_name} onChange={set("last_name")} required minLength={2} maxLength={60} /></Field>
             <Field label="Email"><Input type="email" value={draft.email} onChange={set("email")} required maxLength={255} /></Field>
             <Field label={draft.id ? "New password (optional)" : "Password"}><Input type="password" value={draft.password} onChange={set("password")} required={!draft.id} minLength={8} autoComplete="new-password" /></Field>
             <Field label="Role" hint={isSelf ? "You can't change your own role." : undefined}>
@@ -224,7 +234,7 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
               </Select>
             </Field>
             <Field label="General area"><Input value={draft.location} onChange={set("location")} maxLength={120} placeholder="e.g. Yaba" /></Field>
-            <Field label="Phone"><Input type="tel" value={draft.phone} onChange={set("phone")} maxLength={32} /></Field>
+            <Field label="Phone" hint="Nigerian mobile — one account per number."><Input type="tel" value={draft.phone} onChange={set("phone")} maxLength={32} placeholder="0803 123 4567" /></Field>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={draft.email_verified} onCheckedChange={(checked) => setDraft((current) => current && { ...current, email_verified: checked === true })} />

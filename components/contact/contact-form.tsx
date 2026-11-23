@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,16 @@ import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 
 /** The contact form is the only interactive part of the contact page. */
+const TOPICS = ["general", "safety", "account", "partnership", "other"];
+
 export function ContactForm() {
   const { user } = useSession();
+  // Deep links such as /contact?topic=safety (the "Report" button on the safety banner) preselect the topic.
+  const requestedTopic = useSearchParams().get("topic");
   const [form, setForm] = useState({
     name: user?.name ?? "",
     email: user?.email ?? "",
-    topic: "general",
+    topic: requestedTopic && TOPICS.includes(requestedTopic) ? requestedTopic : "general",
     message: "",
     website: "",
   });

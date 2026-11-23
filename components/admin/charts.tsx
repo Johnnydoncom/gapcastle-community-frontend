@@ -153,7 +153,7 @@ export function RankedBars({ data, color = SERIES.one, height }: { data: Array<{
   );
 }
 
-/** Two-part composition per row (pickup vs waybill per state), stacked with a 2px gap. */
+/** Two-part composition per row (pickup vs delivery per state), stacked with a 2px gap. */
 export function StackedBars({ data, series, height }: { data: Array<Record<string, number | string>>; series: Series[]; height?: number }) {
   return (
     <ResponsiveContainer width="100%" height={height ?? Math.max(72, data.length * 38 + 16)}>

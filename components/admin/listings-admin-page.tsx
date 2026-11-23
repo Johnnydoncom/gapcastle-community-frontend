@@ -1,21 +1,20 @@
 "use client";
-import Image from "next/image";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDeferredValue, useState, type FormEvent } from "react";
-import { Check, ExternalLink, Package, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { useDeferredValue, useState } from "react";
+import { Check, ExternalLink, Eye, Package, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { DataTable, Field, FilterSelect, PageHeader, Pagination, Pill, RowActions, STATUS_TONE, SearchInput, Toolbar, errorMessage, humanize, useConfirm } from "@/components/admin/ui";
+import { DataTable, FilterSelect, PageHeader, Pagination, Pill, STATUS_TONE, SearchInput, Toolbar, errorMessage, humanize, useConfirm } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input, Select, Textarea } from "@/components/ui/form-fields";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
-import { CONDITION_LABELS, timeAgo } from "@/lib/gapcastle";
+import { timeAgo } from "@/lib/gapcastle";
 import { listingPath } from "@/lib/site";
 import type { Category } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type AdminListing = {
   id: number; slug: string; title: string; description: string; condition: string; location: string; city: string | null;
@@ -39,7 +38,6 @@ export function AdminListingsPage() {
   const [moderation, setModeration] = useState(params.get("moderation") ?? "");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
-  const [editing, setEditing] = useState<AdminListing | null>(null);
   const search = useDeferredValue(q);
 
   const { data, isLoading } = useQuery({
@@ -62,7 +60,7 @@ export function AdminListingsPage() {
   async function moderate(listing: AdminListing, outcome: "approved" | "rejected") {
     try {
       await api.patch(`moderation/listings/${listing.id}`, { moderation_status: outcome, note: null });
-      toast.success(outcome === "approved" ? `“${listing.title}” is live` : `“${listing.title}” rejected — the giver was notified`);
+      toast.success(outcome === "approved" ? `"${listing.title}" is live` : `"${listing.title}" rejected — the giver was notified`);
       refresh();
     } catch (err) {
       toast.error(errorMessage(err, "Could not update listing"));
@@ -77,6 +75,22 @@ export function AdminListingsPage() {
     } catch (err) {
       toast.error(errorMessage(err, "Could not restore listing"));
     }
+  }
+
+  function deleteListing(listing: AdminListing) {
+    confirm({
+      title: `Delete "${listing.title}"?`,
+      description: "Open requests are declined and the listing disappears from the site. You can restore it later from the Deleted filter.",
+      action: async () => {
+        try {
+          await api.delete(`admin/listings/${listing.id}`);
+          toast.success("Listing deleted");
+          refresh();
+        } catch (err) {
+          toast.error(errorMessage(err, "Could not delete listing"));
+        }
+      },
+    });
   }
 
   return (
@@ -110,148 +124,171 @@ export function AdminListingsPage() {
         <DataTable
           loading={isLoading}
           empty={!data?.data.length}
-          minWidth={900}
-          head={<tr><th>Item</th><th>Giver</th><th>Category</th><th>Status</th><th>Review</th><th className="text-right">Requests</th><th>Listed</th><th className="w-10" /></tr>}
+          minWidth={1000}
+          head={
+            <tr>
+              <th>Item</th>
+              <th>Giver</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Review</th>
+              <th className="text-right">Requests</th>
+              <th>Listed</th>
+              <th className="text-right">Actions</th>
+            </tr>
+          }
         >
           {data?.data.map((listing) => (
-            <tr key={listing.id} className={listing.deleted_at ? "bg-destructive/5" : undefined}>
+            <tr key={listing.id} className={cn("group transition-colors hover:bg-muted/30", listing.deleted_at && "bg-destructive/5")}>
+              {/* Item cell */}
               <td>
-                <div className="flex items-center gap-3">
-                  <span className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-muted">
+                <Link href={`/admin/listings/${listing.id}/edit`} className="flex items-center gap-3 hover:opacity-80">
+                  <span className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border">
                     {listing.image ? (
-                      <Image src={listing.image} alt="" fill sizes="44px" className="object-cover" />
-                    ) :<Package className="absolute inset-0 m-auto size-5 text-muted-foreground" />}
+                      <Image src={listing.image} alt="" fill sizes="48px" className="object-cover" />
+                    ) : <Package className="absolute inset-0 m-auto size-5 text-muted-foreground" />}
                   </span>
                   <div className="min-w-0">
-                    <p className="max-w-64 truncate font-semibold">{listing.title}</p>
-                    <p className="text-xs text-muted-foreground">{listing.location}{listing.is_demo ? " · Demo" : ""}</p>
+                    <p className="max-w-56 truncate font-semibold text-foreground group-hover:text-primary">{listing.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {listing.location}
+                      {listing.is_demo ? " · Demo" : ""}
+                      {listing.city ? ` · ${listing.city}` : ""}
+                    </p>
                   </div>
-                </div>
+                </Link>
               </td>
-              <td className="text-muted-foreground">{listing.giver?.name ?? "—"}</td>
-              <td className="text-muted-foreground">{listing.category?.name ?? "—"}</td>
-              <td>{listing.deleted_at ? <Pill tone="red">Deleted</Pill> : <Pill tone={STATUS_TONE[listing.status]}>{humanize(listing.status)}</Pill>}</td>
+
+              {/* Giver */}
+              <td>
+                {listing.giver ? (
+                  <Link href={`/users/${listing.giver.slug}`} target="_blank" className="text-sm text-foreground/80 hover:text-primary hover:underline">
+                    {listing.giver.name}
+                  </Link>
+                ) : <span className="text-muted-foreground">—</span>}
+              </td>
+
+              {/* Category */}
+              <td>
+                {listing.category ? (
+                  <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
+                    {listing.category.name}
+                  </span>
+                ) : <span className="text-muted-foreground">—</span>}
+              </td>
+
+              {/* Status */}
+              <td>
+                {listing.deleted_at
+                  ? <Pill tone="red">Deleted</Pill>
+                  : <Pill tone={STATUS_TONE[listing.status]}>{humanize(listing.status)}</Pill>
+                }
+              </td>
+
+              {/* Review */}
               <td>
                 {listing.moderation_status === "pending" && !listing.deleted_at ? (
-                  <div className="flex gap-1">
-                    <Button size="sm" className="h-7 px-2" onClick={() => void moderate(listing, "approved")}><Check className="size-3.5" /> Approve</Button>
-                    <Button size="icon-sm" variant="outline" className="size-7" onClick={() => void moderate(listing, "rejected")} aria-label="Reject"><X className="size-3.5" /></Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      className="h-7 gap-1 px-2.5 text-xs"
+                      onClick={() => void moderate(listing, "approved")}
+                    >
+                      <Check className="size-3" /> Approve
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      className="size-7"
+                      onClick={() => void moderate(listing, "rejected")}
+                      aria-label="Reject"
+                    >
+                      <X className="size-3.5" />
+                    </Button>
                   </div>
-                ) : <Pill tone={STATUS_TONE[listing.moderation_status]}>{humanize(listing.moderation_status)}</Pill>}
+                ) : (
+                  <Pill tone={STATUS_TONE[listing.moderation_status]}>{humanize(listing.moderation_status)}</Pill>
+                )}
               </td>
-              <td className="text-right tabular-nums">{listing.requests_count}</td>
-              <td className="whitespace-nowrap text-muted-foreground">{timeAgo(listing.created_at)}</td>
+
+              {/* Requests count */}
+              <td className="text-right">
+                <span className={cn(
+                  "inline-flex min-w-[28px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums",
+                  listing.requests_count > 0 ? "bg-primary-50 text-primary-700" : "text-muted-foreground",
+                )}>
+                  {listing.requests_count}
+                </span>
+              </td>
+
+              {/* Listed */}
+              <td className="whitespace-nowrap text-sm text-muted-foreground">{timeAgo(listing.created_at)}</td>
+
+              {/* Action buttons */}
               <td>
-                <RowActions items={[
-                  { label: "View on site", icon: <ExternalLink className="size-4" />, onSelect: () => window.open(listingPath(listing.slug), "_blank"), hidden: !!listing.deleted_at },
-                  { label: "Edit", icon: <Pencil className="size-4" />, onSelect: () => setEditing(listing), hidden: !isAdmin || !!listing.deleted_at },
-                  { label: "Restore", icon: <RotateCcw className="size-4" />, onSelect: () => void restore(listing), hidden: !isAdmin || !listing.deleted_at },
-                  "separator",
-                  {
-                    label: "Delete", icon: <Trash2 className="size-4" />, danger: true, hidden: !isAdmin || !!listing.deleted_at,
-                    onSelect: () => confirm({
-                      title: `Delete “${listing.title}”?`,
-                      description: "Open requests are declined and the listing disappears from the site. You can restore it later from the Deleted filter.",
-                      action: async () => {
-                        try {
-                          await api.delete(`admin/listings/${listing.id}`);
-                          toast.success("Listing deleted");
-                          refresh();
-                        } catch (err) {
-                          toast.error(errorMessage(err, "Could not delete listing"));
-                        }
-                      },
-                    }),
-                  },
-                ]} />
+                <div className="flex items-center justify-end gap-1">
+                  {!listing.deleted_at && (
+                    <>
+                      {/* View on site */}
+                      <Button
+                        asChild
+                        size="icon-sm"
+                        variant="ghost"
+                        className="size-8 text-muted-foreground hover:text-foreground"
+                      >
+                        <Link href={listingPath(listing.slug)} target="_blank" aria-label="View on site">
+                          <Eye className="size-4" />
+                        </Link>
+                      </Button>
+
+                      {/* Edit — navigates to separate page */}
+                      {isAdmin && (
+                        <Button
+                          asChild
+                          size="icon-sm"
+                          variant="ghost"
+                          className="size-8 text-muted-foreground hover:text-primary"
+                        >
+                          <Link href={`/admin/listings/${listing.id}/edit`} aria-label="Edit listing">
+                            <Pencil className="size-4" />
+                          </Link>
+                        </Button>
+                      )}
+
+                      {/* Delete */}
+                      {isAdmin && (
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          className="size-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteListing(listing)}
+                          aria-label="Delete listing"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Restore */}
+                  {listing.deleted_at && isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 px-2.5 text-xs"
+                      onClick={() => void restore(listing)}
+                    >
+                      <RotateCcw className="size-3" /> Restore
+                    </Button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
         </DataTable>
         {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} total={data.meta.total} onPage={setPage} />}
       </div>
-
-      <EditListingDialog listing={editing} categories={categories ?? []} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />
       {confirmDialog}
     </div>
-  );
-}
-
-function EditListingDialog({ listing, categories, onClose, onSaved }: { listing: AdminListing | null; categories: Category[]; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState<Record<string, string>>({});
-  const [openedFor, setOpenedFor] = useState<AdminListing | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  if (listing !== openedFor) {
-    setOpenedFor(listing);
-    if (listing) {
-      setForm({
-        title: listing.title, description: listing.description, category_id: String(listing.category?.id ?? ""), condition: listing.condition,
-        location: listing.location, city: listing.city ?? "", status: listing.status, moderation_status: listing.moderation_status,
-      });
-    }
-  }
-
-  const set = (key: string) => (event: { target: { value: string } }) => setForm((current) => ({ ...current, [key]: event.target.value }));
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!listing) return;
-    setBusy(true);
-    try {
-      await api.put(`admin/listings/${listing.id}`, { ...form, category_id: Number(form.category_id), city: form.city || null });
-      toast.success("Listing saved");
-      onSaved();
-    } catch (err) {
-      toast.error(errorMessage(err, "Could not save listing"));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Dialog open={!!listing} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit listing</DialogTitle>
-          <DialogDescription>Items are always free — there is no price to set.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <Field label="Title"><Input value={form.title ?? ""} onChange={set("title")} required minLength={3} maxLength={120} /></Field>
-          <Field label="Description"><Textarea value={form.description ?? ""} onChange={set("description")} required minLength={10} maxLength={5000} rows={5} /></Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Category">
-              <Select value={form.category_id ?? ""} onChange={set("category_id")} required>
-                <option value="" disabled>Choose…</option>
-                {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </Select>
-            </Field>
-            <Field label="Condition">
-              <Select value={form.condition ?? ""} onChange={set("condition")}>
-                {Object.entries(CONDITION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </Select>
-            </Field>
-            <Field label="General area"><Input value={form.location ?? ""} onChange={set("location")} required maxLength={120} /></Field>
-            <Field label="City"><Input value={form.city ?? ""} onChange={set("city")} maxLength={120} /></Field>
-            <Field label="Status">
-              <Select value={form.status ?? ""} onChange={set("status")}>
-                {STATUSES.map((value) => <option key={value} value={value}>{humanize(value)}</option>)}
-              </Select>
-            </Field>
-            <Field label="Review">
-              <Select value={form.moderation_status ?? ""} onChange={set("moderation_status")}>
-                <option value="pending">Awaiting approval</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </Select>
-            </Field>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save listing"}</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

@@ -1,12 +1,12 @@
 import Image from "next/image";
+import { TimeAgo } from "@/components/ui/time-ago";
 import Link from "next/link";
-import { Clock, MapPin, Package } from "lucide-react";
+import { Clock, MapPin, Navigation, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SaveButton } from "@/components/items/save-button";
 import {
   CONDITION_LABELS,
   LISTING_STATUS_LABELS,
-  timeAgo,
   type ListingRow,
 } from "@/lib/gapcastle";
 import { listingPath } from "@/lib/site";
@@ -63,6 +63,11 @@ export function ItemCard({
             </Badge>
           </div>
         )}
+        {typeof listing.distance_km === "number" && (
+          <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-card/95 px-2 py-0.5 text-[11px] font-semibold text-primary shadow-soft backdrop-blur">
+            <Navigation className="size-3" /> ~{listing.distance_km} km away
+          </span>
+        )}
         <SaveButton
           listingId={listing.id}
           listingSlug={listing.slug}
@@ -80,10 +85,11 @@ export function ItemCard({
         {listing.categories?.name && <p className="truncate text-xs text-muted-foreground">{listing.categories.name}</p>}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2 text-xs text-muted-foreground">
           <span className="inline-flex min-w-0 items-center gap-1">
-            <MapPin className="size-3.5 shrink-0" /> <span className="truncate">{listing.location}</span>
+            <MapPin className="size-3.5 shrink-0" />
+            <span className="truncate">{listing.location}</span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1">
-            <Clock className="size-3" /> {timeAgo(listing.created_at)}
+            <Clock className="size-3" /> <TimeAgo iso={listing.created_at} />
           </span>
         </div>
         {(listing.request_count ?? 0) > 0 && (

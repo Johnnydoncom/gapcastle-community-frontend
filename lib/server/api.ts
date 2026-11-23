@@ -13,6 +13,7 @@ import type {
   NgState,
   Paginated,
   PublicProfile,
+  Review,
 } from "@/lib/types";
 
 type QueryValue = string | number | boolean | string[] | null | undefined;
@@ -80,6 +81,11 @@ export type ListingQuery = {
   fulfillment?: string;
   sort?: string;
   near?: string;
+  /** "Near me": the visitor's LGA (preferred) or state id. */
+  near_lga?: number | null;
+  near_state?: number | null;
+  /** Limit to the visitor's LGA or state. */
+  within?: "lga" | "state" | "any";
   available_only?: boolean;
   include_given?: boolean;
   page?: number;
@@ -123,12 +129,24 @@ export function getStates(): Promise<{ data: NgState[] }> {
   return serverGet<{ data: NgState[] }>("states", undefined, { authenticated: false, revalidate: 60 });
 }
 
+export type LocateResult = { lga: { id: number; name: string; slug: string }; state: { id: number; name: string; slug: string } };
+
+/** Nearest LGA to a point. Used only to turn an approximate position into an area; the point is not stored. */
+export function locateArea(lat: number, lng: number): Promise<{ data: LocateResult }> {
+  return serverGet<{ data: LocateResult }>("locate", { lat: lat.toFixed(3), lng: lng.toFixed(3) }, { authenticated: false, revalidate: 86400 });
+}
+
 export function getStats(): Promise<{ data: CommunityStats }> {
   return serverGet<{ data: CommunityStats }>("stats", undefined, { revalidate: 60 });
 }
 
 export function getAnnouncements(): Promise<{ data: Announcement[] }> {
   return serverGet<{ data: Announcement[] }>("announcements", undefined, { revalidate: 60 });
+}
+
+/** Recent community reviews for the homepage (public, cached briefly). */
+export function getReviews(): Promise<{ data: Review[] }> {
+  return serverGet<{ data: Review[] }>("reviews", undefined, { authenticated: false, revalidate: 60 });
 }
 
 export type ViewerResponse = {

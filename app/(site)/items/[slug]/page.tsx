@@ -17,30 +17,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { data: listing } = await getListing(slug);
     const canonical = listingPath(listing.slug || String(listing.id));
     const images = (listing.images ?? []).map((image) => image.url);
-    const description = listing.description.replace(/\s+/g, " ").slice(0, 158).trim();
+    const description = (listing.description_text ?? listing.description).replace(/\s+/g, " ").slice(0, 158).trim();
     const indexable = listing.status !== "removed" && listing.status !== "paused" && listing.moderation_status !== "rejected";
 
+    const locationDesc = [listing.location, listing.city, "Nigeria"].filter(Boolean).join(", ");
+    const categoryName = listing.category?.name ?? "Items";
+    const richDescription = `${description} Free to a good home in ${locationDesc}.`;
+
     return {
-      title: `${listing.title} — Free`,
-      description: `${description} Free to a good home in ${listing.location}.`,
+      title: `${listing.title} — Free in ${listing.location}`,
+      description: richDescription,
       alternates: { canonical },
       robots: indexable ? undefined : { index: false, follow: false },
+      keywords: [`free ${categoryName.toLowerCase()} ${listing.location}`, `free ${listing.title.toLowerCase()}`, `free items ${listing.location}`, "Gratis Castle"],
       openGraph: {
         type: "website",
         url: canonical,
         title: `${listing.title} — Free on Gratis Castle`,
-        description,
+        description: richDescription,
         images: images.length > 0 ? images.map((url) => ({ url })) : [{ url: FALLBACK_IMAGE, width: 768, height: 553 }],
       },
       twitter: {
         card: "summary_large_image",
         title: `${listing.title} — Free on Gratis Castle`,
-        description,
+        description: richDescription,
         images: images.length > 0 ? images : [FALLBACK_IMAGE],
       },
       other: {
         "product:price:amount": "0",
         "product:price:currency": "NGN",
+        "geo.region": "NG",
+        "geo.placename": listing.location,
         "og:see_also": absoluteUrl("/explore"),
       },
     };

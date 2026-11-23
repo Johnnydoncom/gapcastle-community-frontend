@@ -40,7 +40,12 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/auth/[a
   try {
     upstream = await fetch(backendUrl(endpoint), {
       method: "POST",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        // The visitor's IP, used only as a duplicate-account hint for moderators.
+        ...(request.headers.get("x-forwarded-for") ? { "X-Forwarded-For": request.headers.get("x-forwarded-for")! } : {}),
+      },
       body: JSON.stringify({ ...body, device_name: "web" }),
       cache: "no-store",
     });

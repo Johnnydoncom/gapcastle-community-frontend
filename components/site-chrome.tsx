@@ -22,6 +22,7 @@ import {
   MessageCircle,
   Package,
   PackageSearch,
+  Receipt,
   Search,
   Settings,
   ShieldCheck,
@@ -48,6 +49,7 @@ import { useSession, useSignOut } from "@/hooks/use-session";
 import type { Session } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import logoMark from "@/public/brand/logo-mark.png";
+import logoMarkWhite from "@/public/brand/logo-mark-white.png";
 import { BrandWordmark } from "@/components/brand-wordmark";
 
 /**
@@ -61,7 +63,7 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 const PRIMARY_LINKS = [
   { href: "/explore", label: "Explore free items", icon: PackageSearch },
   { href: "/categories", label: "Categories", icon: LayoutGrid },
-  { href: "/pickup-hubs", label: "Pickup hubs", icon: MapPin },
+  { href: "/pickup-hubs", label: "Pickup hub", icon: MapPin },
   { href: "/how-it-works", label: "How it works", icon: HandHeart },
   { href: "/community", label: "Community", icon: Users },
   { href: "/faq", label: "Help & FAQs", icon: LifeBuoy },
@@ -70,7 +72,7 @@ const PRIMARY_LINKS = [
 export const ACCOUNT_LINKS = [
   { href: "/account", label: "Overview", icon: LayoutDashboard },
   { href: "/account/listings", label: "My listings", icon: Package },
-  { href: "/account/requests", label: "My requests", icon: HandHeart },
+  { href: "/account/requests", label: "My orders", icon: Receipt },
   { href: "/account/saved", label: "Saved items", icon: Bookmark },
   { href: "/account/messages", label: "Messages", icon: MessageCircle },
   { href: "/account/notifications", label: "Notifications", icon: Bell },
@@ -97,7 +99,12 @@ function isActive(pathname: string, href: string) {
 function Logo({ inverted = false, compact = false }: { inverted?: boolean; compact?: boolean }) {
   return (
     <Link href="/" className="inline-flex shrink-0 items-center gap-2.5" aria-label="Gratis Castle home">
-      <Image src={logoMark} alt="" priority className="h-8 w-auto shrink-0" sizes="48px" />
+      {inverted ? (
+        // Dark backgrounds use the official white mark (from the white lockup) — never a box behind the logo.
+        <Image src={logoMarkWhite} alt="" className="h-9 w-auto shrink-0" sizes="48px" />
+      ) : (
+        <Image src={logoMark} alt="" priority className="h-9 w-auto shrink-0" sizes="48px" />
+      )}
       <BrandWordmark inverted={inverted} className={cn(compact && "max-[359px]:hidden")} />
     </Link>
   );
@@ -125,7 +132,7 @@ function HeaderIconLink({ href, label, count = 0, children, className }: { href:
   );
 }
 
-export function SiteChrome({ children, categoryNav }: { children: ReactNode; categoryNav?: ReactNode }) {
+export function SiteChrome({ children, categoryNav, hubNote }: { children: ReactNode; categoryNav?: ReactNode; hubNote?: ReactNode }) {
   const { user, session } = useSession();
   const signOut = useSignOut();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -208,7 +215,11 @@ export function SiteChrome({ children, categoryNav }: { children: ReactNode; cat
           <MobileSearchRow />
         </Suspense>
 
-        {categoryNav && <div className="hidden border-t border-border md:block">{categoryNav}</div>}
+        {categoryNav && (
+          <Suspense fallback={<div className="hidden border-t border-border md:block">{categoryNav}</div>}>
+            <CategoryStrip>{categoryNav}</CategoryStrip>
+          </Suspense>
+        )}
       </header>
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -247,7 +258,7 @@ export function SiteChrome({ children, categoryNav }: { children: ReactNode; cat
       <main id="main" className="flex-1">{children}</main>
 
       <Suspense fallback={<SiteFooter />}>
-        <FooterOutsideAdmin />
+        <FooterOutsideAdmin hubNote={hubNote} />
       </Suspense>
 
       <Suspense fallback={null}>
@@ -282,6 +293,12 @@ function MobileLeading({ pathname, onMenu }: { pathname: string; onMenu: () => v
   );
 }
 
+/** The category strip under the header. The homepage has its own category menu on large screens, so the strip hides there. */
+function CategoryStrip({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  return <div className={cn("hidden border-t border-border md:block", pathname === "/" && "lg:hidden")}>{children}</div>;
+}
+
 function ActiveMobileLeading({ onMenu }: { onMenu: () => void }) {
   return <MobileLeading pathname={usePathname()} onMenu={onMenu} />;
 }
@@ -292,10 +309,10 @@ function TopBar() {
       <div className="container-page flex h-9 items-center justify-between gap-4 text-xs">
         <p className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 rounded bg-highlight px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-highlight-foreground">100% FREE</span>
-          <span className="truncate">Every item is free — collect at a pickup hub or get it by waybill anywhere in Nigeria.</span>
+          <span className="truncate">Give or pick an item for free — collect at our pickup hub or get free delivery anywhere in Nigeria.</span>
         </p>
         <nav aria-label="Help" className="hidden shrink-0 items-center gap-5 md:flex">
-          <Link href="/pickup-hubs" className="inline-flex items-center gap-1.5 hover:text-white"><MapPin className="size-3.5" /> Pickup hubs</Link>
+          <Link href="/pickup-hubs" className="inline-flex items-center gap-1.5 hover:text-white"><MapPin className="size-3.5" /> Pickup hub</Link>
           <Link href="/how-it-works" className="hover:text-white">How it works</Link>
           <Link href="/safety" className="hover:text-white">Safety</Link>
           <Link href="/faq" className="hover:text-white">Help</Link>
@@ -349,20 +366,20 @@ function ActiveMobileMenuLinks(props: { isMember: boolean; isModerator: boolean;
   return <MobileMenuLinks pathname={usePathname()} {...props} />;
 }
 
-function FooterOutsideAdmin() {
+function FooterOutsideAdmin({ hubNote }: { hubNote?: ReactNode }) {
   const pathname = usePathname();
-  return pathname.startsWith("/admin") ? null : <SiteFooter compactOnMobile={hasOwnActionBar(pathname)} />;
+  return pathname.startsWith("/admin") ? null : <SiteFooter compactOnMobile={hasOwnActionBar(pathname)} hubNote={hubNote} />;
 }
 
-function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) {
+function SiteFooter({ compactOnMobile = false, hubNote }: { compactOnMobile?: boolean; hubNote?: ReactNode }) {
   return (
     <footer className={cn("mt-16 bg-ink text-ink-foreground", compactOnMobile ? "hidden md:block" : "pb-20 md:pb-0")}>
       <div className="border-b border-white/10">
         <div className="container-page grid gap-4 py-6 text-sm sm:grid-cols-3">
           {[
-            { icon: Gift, title: "Always free", text: "No prices, no payments for items." },
-            { icon: MapPin, title: "Pickup hubs", text: "Collect from a Gratis Castle hub in your state." },
-            { icon: Truck, title: "Waybill nationwide", text: "Get items sent anywhere in Nigeria." },
+            { icon: Gift, title: "100% free", text: "No prices, no payments for items." },
+            { icon: MapPin, title: "Pickup hub", text: hubNote ?? "Collect from a Gratis Castle pickup hub." },
+            { icon: Truck, title: "Free delivery", text: "We deliver anywhere in Nigeria at no cost." },
           ].map((item) => (
             <div key={item.title} className="flex items-center gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-yellow-300"><item.icon className="size-5" /></span>
@@ -375,9 +392,8 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
         <div className="col-span-2 lg:col-span-1">
           <Logo inverted />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-foreground/75">
-            A free community marketplace where good things find a second home. Every item is free — always.
+            A free community marketplace where good things find a second home. Give or pick an item for free.
           </p>
-          <p className="mt-3 text-sm font-semibold text-brand-yellow-300">Give freely. Receive gratefully. Build community.</p>
           <div className="mt-5 inline-flex">
             <InstallAppButton variant="highlight" />
           </div>
@@ -387,7 +403,7 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
           { href: "/explore", label: "Browse free items" },
           { href: "/categories", label: "Browse categories" },
           { href: "/give", label: "Give an item" },
-          { href: "/pickup-hubs", label: "Pickup hubs" },
+          { href: "/pickup-hubs", label: "Pickup hub" },
           { href: "/community", label: "Our community" },
         ]} />
         <FooterColumn title="Help" links={[
@@ -405,7 +421,7 @@ function SiteFooter({ compactOnMobile = false }: { compactOnMobile?: boolean }) 
       </div>
       <div className="border-t border-white/10">
         <p className="container-page py-5 text-xs text-ink-foreground/60">
-          © <CurrentYear /> Gratis Castle · Serving Nigeria only · Waybill or delivery costs, if any, are separate and agreed openly.
+          © <CurrentYear /> Gratis Castle · Serving Nigeria only · Items and delivery are free — never pay anyone for an item.
         </p>
       </div>
     </footer>

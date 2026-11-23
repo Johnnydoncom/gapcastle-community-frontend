@@ -87,11 +87,11 @@ export function AdminOverviewPage() {
         <ChartCard
           title="How receivers collect"
           description={`Requests in the last ${range} days`}
-          table={{ columns: ["Method", "Requests"], rows: data ? [["Pickup hub", data.fulfillment.pickup], ["Waybill", data.fulfillment.delivery]] : [] }}
+          table={{ columns: ["Method", "Orders"], rows: data ? [["Pickup hub", data.fulfillment.pickup], ["Delivery", data.fulfillment.delivery]] : [] }}
         >
           {data ? (
             <div className="pt-4">
-              <SplitBar parts={[{ label: "Pickup hub", value: data.fulfillment.pickup, color: SERIES.one }, { label: "Waybill", value: data.fulfillment.delivery, color: SERIES.two }]} />
+              <SplitBar parts={[{ label: "Pickup hub", value: data.fulfillment.pickup, color: SERIES.one }, { label: "Delivery", value: data.fulfillment.delivery, color: SERIES.two }]} />
               <div className="mt-5 px-3">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Listings by status</p>
                 <ul className="space-y-1.5 text-sm">
@@ -120,12 +120,12 @@ export function AdminOverviewPage() {
         <ChartCard
           title="Requests by state"
           description={`Top states in the last ${range} days`}
-          legend={[{ key: "pickup", label: "Pickup hub", color: SERIES.one }, { key: "delivery", label: "Waybill", color: SERIES.two }]}
-          table={{ columns: ["State", "Pickup", "Waybill"], rows: (data?.by_state ?? []).map((row) => [row.name, row.pickup, row.delivery]) }}
+          legend={[{ key: "pickup", label: "Pickup hub", color: SERIES.one }, { key: "delivery", label: "Delivery", color: SERIES.two }]}
+          table={{ columns: ["State", "Pickup", "Delivery"], rows: (data?.by_state ?? []).map((row) => [row.name, row.pickup, row.delivery]) }}
         >
           {data ? (
             data.by_state.length ? (
-              <StackedBars data={data.by_state} series={[{ key: "pickup", label: "Pickup hub", color: SERIES.one }, { key: "delivery", label: "Waybill", color: SERIES.two }]} />
+              <StackedBars data={data.by_state} series={[{ key: "pickup", label: "Pickup hub", color: SERIES.one }, { key: "delivery", label: "Delivery", color: SERIES.two }]} />
             ) : <p className="px-3 py-12 text-center text-sm text-muted-foreground">No requests with a state in this period yet.</p>
           ) : <ChartSkeleton />}
         </ChartCard>
@@ -142,7 +142,7 @@ export function AdminOverviewPage() {
                 <tr key={row.id}>
                   <td className="px-5 py-3 font-medium">{row.listing ? <Link href={listingPath(row.listing.slug)} target="_blank" className="hover:text-primary">{row.listing.title}</Link> : "Deleted listing"}</td>
                   <td className="px-5 py-3 text-muted-foreground">{row.requester ?? "—"}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{row.fulfillment_method === "pickup" ? `Hub${row.hub ? ` · ${row.hub}` : ""}` : `Waybill${row.state ? ` · ${row.state}` : ""}`}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{row.fulfillment_method === "pickup" ? `Hub${row.hub ? ` · ${row.hub}` : ""}` : `Delivery${row.state ? ` · ${row.state}` : ""}`}</td>
                   <td className="px-5 py-3"><Pill tone={STATUS_TONE[row.status] ?? "gray"}>{humanize(row.status)}</Pill></td>
                   <td className="px-5 py-3 text-right text-muted-foreground">{timeAgo(row.created_at)}</td>
                 </tr>

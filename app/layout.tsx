@@ -1,13 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Anton, Inter, Lora } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { PwaRegister } from "@/components/pwa/pwa-register";
+import { JsonLd } from "@/components/seo/json-ld";
+import { siteJsonLd, localBusinessJsonLd } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+/** UI and body text: Inter (variable weight) — highly legible at the small sizes a marketplace relies on. */
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-inter",
+  display: "swap",
+});
+
+/** Brand wordmark: the heavy condensed capitals of the official Gratis Castle lockup. */
+const wordmark = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+});
+
+/** Brand tagline: the italic serif of "give freely, receive gratefully…". */
+const tagline = Lora({
+  subsets: ["latin"],
+  weight: ["500"],
+  style: ["italic"],
+  variable: "--font-lora",
   display: "swap",
 });
 
@@ -50,13 +70,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-NG" className={jakarta.variable}>
+    <html lang="en-NG" className={`${inter.variable} ${wordmark.variable} ${tagline.variable}`}>
       <body>
         <a href="#main" className="sr-only z-50 rounded-lg bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
           Skip to content
         </a>
         <Providers>{children}</Providers>
         <PwaRegister />
+        <JsonLd data={siteJsonLd()} />
+        <JsonLd data={localBusinessJsonLd()} />
       </body>
     </html>
   );

@@ -3,6 +3,8 @@ import {
   Armchair,
   Shirt,
   CookingPot,
+  Lamp,
+  Wrench,
   BookOpen,
   Baby,
   Dumbbell,
@@ -31,11 +33,12 @@ export const CONDITION_LABELS: Record<string, string> = {
   like_new: "Like new",
   good: "Good",
   fair: "Fair",
+  needs_repair: "Needs repair",
 };
 
 export const LISTING_STATUS_LABELS: Record<string, string> = {
   available: "Available",
-  reserved: "Reserved",
+  reserved: "Given away",
   given_away: "Given away",
   removed: "Removed",
   paused: "Paused",
@@ -43,10 +46,10 @@ export const LISTING_STATUS_LABELS: Record<string, string> = {
 
 export const REQUEST_STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
-  accepted: "Accepted",
-  declined: "Declined",
+  accepted: "In progress",
+  declined: "Closed",
   cancelled: "Cancelled",
-  completed: "Completed",
+  completed: "Received",
 };
 
 export function timeAgo(iso: string): string {
@@ -70,6 +73,8 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   armchair: Armchair,
   shirt: Shirt,
   "cooking-pot": CookingPot,
+  lamp: Lamp,
+  wrench: Wrench,
   "book-open": BookOpen,
   baby: Baby,
   dumbbell: Dumbbell,
@@ -137,6 +142,8 @@ export type ListingRow = {
   is_saved?: boolean;
   is_owner?: boolean;
   viewer_request?: Listing["viewer_request"];
+  /** Approximate distance from the visitor, in km ("near me"). */
+  distance_km?: number;
 };
 
 export function toCategoryRow(category: Category, index = 0): CategoryRow {
@@ -191,6 +198,7 @@ export function toListingRow(listing: Listing): ListingRow {
         }
       : null,
     request_count: listing.request_count,
+    distance_km: listing.distance_km,
     is_saved: listing.is_saved,
     is_owner: listing.is_owner,
     viewer_request: listing.viewer_request,

@@ -1,4 +1,5 @@
 import { Mail, Phone, ShieldAlert } from "lucide-react";
+import { Suspense } from "react";
 import { ContactForm } from "@/components/contact/contact-form";
 
 /** Server-rendered contact page; only the form is a client island. */
@@ -9,7 +10,9 @@ export function ContactPage() {
       <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">We&apos;d love to hear from you</h1>
       <p className="mt-3 max-w-2xl text-lg text-muted-foreground">Questions, feedback or a safety concern? Send us a message and the Gratis Castle team will reply by email.</p>
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <ContactForm />
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-muted" />}>
+          <ContactForm />
+        </Suspense>
         <aside className="space-y-4">
           <div className="rounded-2xl bg-cream p-6">
             <p className="flex items-center gap-2 font-semibold"><Mail className="size-4 text-primary" /> Email</p>

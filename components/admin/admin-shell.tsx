@@ -4,11 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   Activity,
   ExternalLink,
   FolderTree,
+  Globe,
   HandHeart,
   LayoutDashboard,
   LogOut,
@@ -18,7 +19,6 @@ import {
   Package,
   Search,
   Settings,
-  ShieldCheck,
   TriangleAlert,
   UserCog,
   Users,
@@ -37,7 +37,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useSession, useSignOut } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import logoMark from "@/public/brand/logo-mark.png";
+import logoMarkWhite from "@/public/brand/logo-mark-white.png";
 import { BrandWordmark } from "@/components/brand-wordmark";
 
 type Counts = { pending_moderation: number; open_reports: number };
@@ -54,7 +54,7 @@ const NAV: Array<{ group: string; links: Array<{ href: string; label: string; ic
   {
     group: "Logistics",
     links: [
-      { href: "/admin/requests", label: "Requests", icon: HandHeart },
+      { href: "/admin/requests", label: "Orders", icon: HandHeart },
       { href: "/admin/locations", label: "Pickup locations", icon: MapPin },
     ],
   },
@@ -75,6 +75,7 @@ const NAV: Array<{ group: string; links: Array<{ href: string; label: string; ic
   {
     group: "System",
     links: [
+      { href: "/admin/seo", label: "SEO", icon: Globe },
       { href: "/admin/settings", label: "Settings", icon: Settings },
       { href: "/admin/activity", label: "Activity log", icon: Activity },
     ],
@@ -96,24 +97,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
     refetchInterval: 60_000,
   });
 
+  // The admin login page lives under /admin/login but should render without the shell chrome.
+  const isLoginRoute = pathname === "/admin/login";
+
+  if (isLoginRoute) {
+    return <>{children}</>;
+  }
+
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center bg-background"><div className="size-10 animate-spin rounded-full border-4 border-primary-100 border-t-primary" /></div>;
   }
 
   if (!user || !user.is_moderator) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="max-w-sm rounded-3xl border border-border bg-card p-8 text-center shadow-soft">
-          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary"><ShieldCheck className="size-7" /></span>
-          <h1 className="mt-4 text-xl font-extrabold">Admin access required</h1>
-          <p className="mt-2 text-sm text-muted-foreground">This area is for Gratis Castle administrators and community moderators.</p>
-          <div className="mt-6 grid gap-2">
-            {!user && <Button asChild><Link href="/auth?next=/admin">Sign in</Link></Button>}
-            <Button asChild variant="outline"><Link href="/">Back to Gratis Castle</Link></Button>
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminLoginRedirect pathname={pathname} />;
   }
 
   const sidebar = <SidebarNav pathname={pathname} counts={counts} onNavigate={() => setNavOpen(false)} />;
@@ -152,8 +148,8 @@ function SidebarNav({ pathname, counts, onNavigate }: { pathname: string; counts
   return (
     <>
       <Link href="/admin" onClick={onNavigate} aria-label="Gratis Castle admin console" className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
-        <Image src={logoMark} alt="" className="h-8 w-auto shrink-0" sizes="48px" />
-        <BrandWordmark inverted tagline="Admin console" />
+        <Image src={logoMarkWhite} alt="" className="h-8 w-auto shrink-0" sizes="48px" />
+        <BrandWordmark inverted tagline="admin console" />
       </Link>
       <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-4">
         {NAV.map((section) => (
@@ -239,6 +235,15 @@ function UserMenu({ name, email, avatar, role }: { name: string; email: string; 
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+/** Redirect to the admin login page from an effect so we don't setState during render. */
+function AdminLoginRedirect({ pathname }: { pathname: string }) {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
+  }, [router, pathname]);
+  return <div className="flex min-h-screen items-center justify-center bg-background"><div className="size-10 animate-spin rounded-full border-4 border-primary-100 border-t-primary" /></div>;
 }
 
 /** Kept for older admin screens; new screens use PageHeader from ./ui. */

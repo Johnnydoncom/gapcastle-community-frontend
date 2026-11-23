@@ -19,12 +19,14 @@ import {
   toListingRow,
   type ListingRow,
 } from "@/lib/gapcastle";
-import { getCategories, getListings, getLocations, getViewer } from "@/lib/server/api";
+import { AreaPicker } from "@/components/home/area-picker";
+import { getCategories, getListings, getLocations } from "@/lib/server/api";
+import { getVisitorArea } from "@/lib/server/area";
 import { absoluteUrl, categoryPath, listingPath } from "@/lib/site";
 import type { Category } from "@/lib/types";
 
 const CONDITIONS = Object.entries(CONDITION_LABELS).filter(([value]) =>
-  ["brand_new", "like_new", "good", "fair"].includes(value),
+  ["brand_new", "like_new", "good", "fair", "needs_repair"].includes(value),
 );
 
 const SORTS = [
@@ -46,10 +48,8 @@ type Props = {
  * the results, categories and pagination are all crawlable without JavaScript.
  */
 export async function ExplorePage({ basePath, filters, title, description, fixedCategory }: Props) {
-  const viewer = filters.sort === "nearest" && !filters.location
-    ? await getViewer().catch(() => null)
-    : null;
-  const near = filters.location || viewer?.data.location || "";
+  // "Nearest first" ranks by distance from the visitor's area (chosen area, account, approximate location or Lagos).
+  const area = filters.sort === "nearest" ? await getVisitorArea() : null;
 
   const [categories, locations, result] = await Promise.all([
     fixedCategory
@@ -63,7 +63,9 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
       condition: filters.condition || undefined,
       fulfillment: filters.fulfillment || undefined,
       sort: filters.sort,
-      near: near || undefined,
+      near_lga: area?.lgaId ?? undefined,
+      near_state: area && !area.lgaId ? area.stateId ?? undefined : undefined,
+      within: area && filters.within ? (filters.within as "lga" | "state") : undefined,
       page: filters.page,
       per_page: EXPLORE_PER_PAGE,
     }).catch(() => null),
@@ -144,7 +146,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
             ))}
           </div>
         </details>
-        <p className="text-xs text-muted-foreground">Only general areas are shown. Every handover goes through a Gratis Castle hub or waybill.</p>
+        <p className="text-xs text-muted-foreground">Only general areas are shown. Every handover goes through a Gratis Castle hub or free delivery.</p>
       </div>
 
       {activeFilters > 0 && (
@@ -209,10 +211,10 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
             </li>
           )}
           <li className="inline-flex items-center gap-1.5 rounded-full bg-highlight-soft px-3 py-1 text-highlight-soft-foreground">
-            <Sparkles className="size-3.5" /> Always free
+            <Sparkles className="size-3.5" /> 100% free
           </li>
           <li className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1 text-muted-foreground">
-            <Truck className="size-3.5" /> Hub pickup or waybill
+            <Truck className="size-3.5" /> Hub pickup or free delivery
           </li>
         </ul>
       </header>
@@ -249,10 +251,16 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
             </div>
           </div>
 
-          {filters.sort === "nearest" && !near && (
-            <p className="mb-4 rounded-xl border border-border bg-cream px-4 py-3 text-sm text-muted-foreground">
-              Choose a location to see the closest items first.
-            </p>
+          {area && (
+            <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Closest to</span>
+              <AreaPicker label={area.label} isGuess={area.source === "default" || area.source === "approximate"} />
+              <span className="ml-auto flex flex-wrap gap-1.5" aria-label="Distance">
+                <FilterPill href={href({ within: "" })} active={!filters.within}>Anywhere</FilterPill>
+                <FilterPill href={href({ within: "state" })} active={filters.within === "state"}>My state</FilterPill>
+                {area.lgaId && <FilterPill href={href({ within: "lga" })} active={filters.within === "lga"}>My LGA</FilterPill>}
+              </span>
+            </div>
           )}
 
           {!result ? (

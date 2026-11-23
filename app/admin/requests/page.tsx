@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AdminRequestsPage } from "@/components/admin/requests-admin-page";
 
-export const metadata: Metadata = { title: "Requests" };
+export const metadata: Metadata = { title: "Orders" };
 
 export default function Page() {
   return (

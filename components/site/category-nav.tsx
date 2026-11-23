@@ -32,7 +32,7 @@ export async function CategoryNav() {
         })}
       </ul>
       <Link href="/pickup-hubs" className="hidden h-8 shrink-0 items-center gap-1.5 rounded-md px-2.5 font-semibold text-primary transition-colors hover:bg-primary-50 xl:inline-flex">
-        <MapPin className="size-4" /> Pickup hubs
+        <MapPin className="size-4" /> Pickup hub
       </Link>
     </nav>
   );

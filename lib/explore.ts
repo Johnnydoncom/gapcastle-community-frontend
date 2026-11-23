@@ -9,6 +9,8 @@ export type ExploreFilters = {
   condition: string;
   fulfillment: string;
   sort: string;
+  /** With "nearest first": limit to the visitor's LGA or state ("" = anywhere). */
+  within: string;
   page: number;
 };
 
@@ -17,8 +19,9 @@ export const EXPLORE_PER_PAGE = 18;
 
 /** Values accepted by the browse endpoint, used to sanitise public query strings. */
 const SORTS = ["newest", "oldest", "nearest", "most_requested"];
-const CONDITIONS = ["brand_new", "like_new", "good", "fair"];
+const CONDITIONS = ["brand_new", "like_new", "good", "fair", "needs_repair"];
 const FULFILLMENTS = ["pickup", "delivery"];
+const WITHIN = ["lga", "state"];
 
 function firstParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
@@ -39,6 +42,7 @@ export function parseExploreFilters(raw: RawSearchParams, fixedCategory?: string
     condition: oneOf(firstParam(raw.condition).trim(), CONDITIONS),
     fulfillment: oneOf(firstParam(raw.fulfillment).trim(), FULFILLMENTS),
     sort: oneOf(firstParam(raw.sort).trim(), SORTS, DEFAULT_EXPLORE_SORT),
+    within: oneOf(firstParam(raw.within).trim(), WITHIN),
     page: Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1,
   };
 }
@@ -63,6 +67,7 @@ export function exploreHref(
   if (next.condition) params.set("condition", next.condition);
   if (next.fulfillment) params.set("fulfillment", next.fulfillment);
   if (next.sort && next.sort !== DEFAULT_EXPLORE_SORT) params.set("sort", next.sort);
+  if (next.within && next.sort === "nearest") params.set("within", next.within);
 
   const page = changes.page ?? 1;
   if (page > 1) params.set("page", String(page));

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ProfilePage } from "@/components/routes/profile-page";
+import { JsonLd } from "@/components/seo/json-ld";
+import { profileJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { ServerApiError, getProfile } from "@/lib/server/api";
 import { profilePath } from "@/lib/site";
 
@@ -17,10 +19,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { data: member } = await getProfile(slug);
     const canonical = profilePath(member.slug || String(member.id));
     const description = member.bio?.replace(/\s+/g, " ").slice(0, 158).trim()
-      || `${member.name} shares free items with neighbours on Gratis Castle.`;
+      || `${member.name} shares free items with neighbours on Gratis Castle in Nigeria.`;
 
     return {
-      title: member.name,
+      title: `${member.name} — Free items giver`,
       description,
       alternates: { canonical },
       openGraph: {
@@ -47,8 +49,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function Page({ params }: Props) {
   return (
     <Suspense fallback={<ProfileSkeleton />}>
-      {params.then(({ slug }) => <ProfilePage slug={slug} />)}
+      {params.then(({ slug }) => <ProfilePageWithJsonLd slug={slug} />)}
     </Suspense>
+  );
+}
+
+async function ProfilePageWithJsonLd({ slug }: { slug: string }) {
+  const member = await getProfile(slug)
+    .then(({ data }) => data)
+    .catch(() => null);
+
+  if (!member) return <ProfilePage slug={slug} />;
+
+  return (
+    <>
+      <ProfilePage slug={slug} />
+      <JsonLd data={profileJsonLd(member)} />
+      <JsonLd data={breadcrumbJsonLd([
+        { name: "Home", url: "/" },
+        { name: "Community", url: "/community" },
+        { name: member.name, url: profilePath(member.slug) },
+      ])} />
+    </>
   );
 }
 

@@ -24,7 +24,7 @@ export function GivePage() {
           <span className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-highlight/25 text-3xl">🎁</span>
           <h1 className="text-3xl font-bold">{live ? "Your item is live!" : "Thanks for sharing!"}</h1>
           <p className="mt-2 text-muted-foreground">
-            {live ? "Members can now find it and send you requests. You'll get a notification each time someone does." : published.message}
+            {live ? "Members can now find it. The first person to check out gets it — we'll notify you straight away and tell you how to hand it over." : published.message}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg"><Link href={listingPath(published.listing.slug)}>View listing</Link></Button>
@@ -35,7 +35,7 @@ export function GivePage() {
     );
   }
 
-  if (loading) return <div className="container-page max-w-3xl py-10"><div className="h-96 animate-pulse rounded-2xl bg-muted" /></div>;
+  if (loading) return <div className="container-page py-10"><div className="h-96 animate-pulse rounded-2xl bg-muted" /></div>;
 
   if (!userId) {
     return (
@@ -43,7 +43,7 @@ export function GivePage() {
         <div className="max-w-md">
           <span className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Gift className="size-8" /></span>
           <h1 className="text-3xl font-bold">Sign in to give an item</h1>
-          <p className="mt-2 text-muted-foreground">Create a free account so neighbours can find your listing and request it.</p>
+          <p className="mt-2 text-muted-foreground">Create a free account so members across Nigeria can find your listing.</p>
           <Button asChild size="lg" className="mt-6"><Link href={`/auth?next=${encodeURIComponent("/give")}`}>Sign in or join</Link></Button>
         </div>
       </div>
@@ -51,11 +51,11 @@ export function GivePage() {
   }
 
   return (
-    <div className="container-page max-w-3xl py-10">
-      <div className="mb-8 text-center">
-        <Badge variant="free" className="mb-3">100% free, always</Badge>
-        <h1 className="text-3xl font-bold tracking-tight">Someone could use what you no longer need.</h1>
-        <p className="mt-2 text-muted-foreground">Share it with your community. It&apos;s free, simple, and meaningful.</p>
+    <div className="container-page py-6 sm:py-10">
+      <div className="mb-6 sm:mb-8">
+        <Badge variant="free" className="mb-3">100% free</Badge>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Give an item for free</h1>
+        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground sm:text-base">Someone could use what you no longer need. Add a few honest details — Gratis Castle handles the handover and delivers it free, and you never meet the receiver.</p>
       </div>
       <ListingForm key={formKey} onSaved={(listing, message) => setPublished({ listing, message })} />
     </div>

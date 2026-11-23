@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Strict warning against private meetups, with basic personal-safety tips for
- * members who go ahead anyway. Used on waybill checkout, chat and the hubs page.
+ * members who go ahead anyway. Used on delivery checkout, chat and the hubs page.
  * Works in server and client components (native <details>, no state).
  */
 export function MeetupSafetyWarning({ defaultOpen = false, className }: { defaultOpen?: boolean; className?: string }) {

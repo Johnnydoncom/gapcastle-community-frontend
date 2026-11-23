@@ -44,7 +44,7 @@ function errorMessage(err: unknown, fallback: string) {
 /**
  * Admin › Pickup locations. Switch pickup on/off per state and manage each
  * state's hubs. Pickup is offered at checkout only when a state is switched on
- * AND has at least one active hub; everyone else gets waybill delivery.
+ * AND has at least one active hub; everyone else gets free delivery.
  */
 export function AdminLocationsPage() {
   const { user } = useSession();
@@ -106,14 +106,14 @@ export function AdminLocationsPage() {
       <AdminHeading
         eyebrow="Logistics"
         title="Pickup locations"
-        description="Choose which states offer pickup and manage the hubs in them. States without an active hub automatically get waybill delivery at checkout."
+        description="Choose which states offer pickup and manage the hubs in them. States without an active hub automatically get free delivery at checkout."
         action={isAdmin && <Button onClick={() => setForm({ ...EMPTY_FORM })}><Plus className="size-4" /> Add pickup hub</Button>}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="States with live pickup" value={liveStates} />
         <Stat label="Active hubs" value={activeHubs} />
-        <Stat label="Waybill-only states" value={states.length - liveStates} className="col-span-2 sm:col-span-1" />
+        <Stat label="Delivery-only states" value={states.length - liveStates} className="col-span-2 sm:col-span-1" />
       </div>
 
       <div className="mb-5 flex flex-wrap gap-3">
@@ -135,7 +135,7 @@ export function AdminLocationsPage() {
         <div className="space-y-4">
           {visible.map((state) => {
             const activeCount = state.pickup_locations.filter((hub) => hub.is_active).length;
-            const status = state.pickup_available ? { label: "Live", variant: "success" as const } : state.pickup_enabled ? { label: "No active hub", variant: "warning" as const } : { label: "Waybill only", variant: "muted" as const };
+            const status = state.pickup_available ? { label: "Live", variant: "success" as const } : state.pickup_enabled ? { label: "No active hub", variant: "warning" as const } : { label: "Delivery only", variant: "muted" as const };
             return (
               <section key={state.id} className="overflow-hidden rounded-2xl border border-border bg-card" aria-labelledby={`state-${state.id}`}>
                 <div className="flex flex-wrap items-center gap-3 border-b border-border bg-muted/40 px-4 py-3">

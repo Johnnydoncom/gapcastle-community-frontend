@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowRight, Check, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, Panel, errorMessage } from "@/components/admin/ui";
+import { Input } from "@/components/ui/form-fields";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
@@ -13,7 +14,7 @@ import { timeAgo } from "@/lib/gapcastle";
 import { cn } from "@/lib/utils";
 
 type Mode = "manual" | "automatic";
-type Settings = { listing_approval: Mode; pending_listings: number; updated_at: string | null; updated_by: string | null };
+type Settings = { listing_approval: Mode; monthly_claim_limit: number; pending_listings: number; updated_at: string | null; updated_by: string | null };
 
 const OPTIONS: Array<{ value: Mode; title: string; text: string; icon: typeof ShieldCheck; recommended?: boolean }> = [
   {
@@ -37,6 +38,7 @@ export function AdminSettingsPage() {
   const isAdmin = !!user?.is_admin;
   const queryClient = useQueryClient();
   const [choice, setChoice] = useState<Mode | null>(null);
+  const [limit, setLimit] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-settings"],
@@ -45,14 +47,18 @@ export function AdminSettingsPage() {
 
   const current = data?.listing_approval ?? "manual";
   const selected = choice ?? current;
-  const dirty = selected !== current;
+  const currentLimit = String(data?.monthly_claim_limit ?? 3);
+  const selectedLimit = limit ?? currentLimit;
+  const limitValid = /^\d+$/.test(selectedLimit) && Number(selectedLimit) >= 1 && Number(selectedLimit) <= 50;
+  const dirty = selected !== current || selectedLimit !== currentLimit;
 
   async function save() {
     setSaving(true);
     try {
-      const response = await api.put<{ data: Settings; message: string }>("admin/settings", { listing_approval: selected });
+      const response = await api.put<{ data: Settings; message: string }>("admin/settings", { listing_approval: selected, monthly_claim_limit: Number(selectedLimit) });
       queryClient.setQueryData(["admin-settings"], response.data);
       setChoice(null);
+      setLimit(null);
       toast.success(response.message);
     } catch (err) {
       toast.error(errorMessage(err, "Could not save settings"));
@@ -117,18 +123,30 @@ export function AdminSettingsPage() {
           </div>
         )}
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-xs text-muted-foreground">Listings created by admins and moderators are always published straight away.</p>
-          {isAdmin ? (
-            <div className="flex gap-2">
-              {dirty && <Button variant="ghost" onClick={() => setChoice(null)} disabled={saving}>Cancel</Button>}
-              <Button onClick={() => void save()} disabled={!dirty || saving}>{saving ? "Saving…" : "Save changes"}</Button>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Only administrators can change settings.</p>
-          )}
-        </div>
+        <p className="mt-4 text-xs text-muted-foreground">Listings created by admins and moderators are always published straight away.</p>
       </Panel>
+
+      <Panel className="mt-5" title="Monthly claim limit" description="How many free items each member can check out per calendar month. Cancelled orders don't count.">
+        <div className="flex flex-wrap items-end gap-4">
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Items per member, per month</span>
+            <Input type="number" inputMode="numeric" min={1} max={50} value={selectedLimit} onChange={(event) => setLimit(event.target.value)} disabled={!isAdmin || isLoading} className="w-32" aria-invalid={!limitValid} />
+          </label>
+          <p className="max-w-md pb-2 text-sm text-muted-foreground">The terms of service say <strong className="text-foreground">3 items per month</strong>. If you change this, update the terms too.</p>
+        </div>
+        {!limitValid && <p className="mt-2 text-xs font-medium text-destructive">Choose a whole number from 1 to 50.</p>}
+      </Panel>
+
+      <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+        {isAdmin ? (
+          <div className="flex gap-2">
+            {dirty && <Button variant="ghost" onClick={() => { setChoice(null); setLimit(null); }} disabled={saving}>Cancel</Button>}
+            <Button onClick={() => void save()} disabled={!dirty || saving || !limitValid}>{saving ? "Saving…" : "Save changes"}</Button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Only administrators can change settings.</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { BadgeCheck, CalendarDays, ChevronRight, Info, MapPin, ShieldCheck, Sparkles, Tag, Truck, Users } from "lucide-react";
+import { AlertTriangle, BadgeCheck, CalendarDays, ChevronRight, Hash, Info, MapPin, Package, PackageCheck, Palette, Ruler, ShieldCheck, Sparkles, Tag, Timer, Truck, type LucideIcon } from "lucide-react";
+import { RichTextContent } from "@/components/editor/rich-text-editor";
 import { ItemActions } from "@/components/items/item-actions";
 import { ItemCard } from "@/components/items/item-card";
 import { ListingGallery } from "@/components/items/listing-gallery";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CONDITION_LABELS, LISTING_STATUS_LABELS, timeAgo, toListingRow } from "@/lib/gapcastle";
+import { TimeAgo } from "@/components/ui/time-ago";
+import { CONDITION_LABELS, LISTING_STATUS_LABELS, toListingRow } from "@/lib/gapcastle";
 import { ServerApiError, getListing, getRelatedListings, getStates } from "@/lib/server/api";
 import { absoluteUrl, categoryPath, listingPath, profilePath } from "@/lib/site";
 import type { Listing, NgState } from "@/lib/types";
@@ -16,6 +18,7 @@ const ITEM_CONDITION: Record<Listing["condition"], string> = {
   like_new: "https://schema.org/UsedCondition",
   good: "https://schema.org/UsedCondition",
   fair: "https://schema.org/UsedCondition",
+  needs_repair: "https://schema.org/DamagedCondition",
 };
 
 /**
@@ -50,16 +53,23 @@ export async function ItemPage({ slug }: { slug: string }) {
   const images = listing.images ?? [];
   const statusLabel = listing.status === "available" ? null : LISTING_STATUS_LABELS[listing.status] ?? listing.status;
   const canonical = absoluteUrl(listingPath(canonicalSlug));
-  const place = [listing.location, listing.city].filter(Boolean).join(", ");
-  const requestCount = listing.request_count ?? 0;
+  const place = [listing.location, listing.city, listing.state?.name].filter(Boolean).join(", ");
+  const facts = listing.details;
+  const isGone = listing.status === "reserved" || listing.status === "given_away";
 
-  const details = [
+  const details: { icon: LucideIcon; label: string; value: React.ReactNode; href?: string }[] = [
     { icon: Tag, label: "Category", value: listing.category?.name ?? "Uncategorised", href: listing.category ? categoryPath(listing.category.slug) : undefined },
     { icon: Sparkles, label: "Condition", value: CONDITION_LABELS[listing.condition] ?? listing.condition_label },
+    { icon: Hash, label: "Quantity", value: facts?.quantity && facts.quantity > 1 ? String(facts.quantity) : "1" },
+    { icon: Package, label: "Brand", value: facts?.brand },
+    { icon: Package, label: "Model", value: facts?.model },
+    { icon: Palette, label: "Colour", value: facts?.colour },
+    { icon: Ruler, label: "Size / dimensions", value: facts?.dimensions },
+    { icon: Timer, label: "Approximate age", value: facts?.item_age },
+    { icon: PackageCheck, label: "What's included", value: facts?.included_items },
     { icon: MapPin, label: "General area", value: place },
-    { icon: CalendarDays, label: "Listed", value: timeAgo(listing.created_at) },
-    { icon: Users, label: "Requests", value: requestCount ? `${requestCount} so far` : "Be the first" },
-  ];
+    { icon: CalendarDays, label: "Listed", value: <TimeAgo iso={listing.created_at} /> },
+  ].filter((row) => !!row.value);
 
   return (
     <div className="container-page pb-6 pt-0 sm:pt-5">
@@ -107,13 +117,13 @@ export async function ItemPage({ slug }: { slug: string }) {
 
               <div className="mt-3 flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-primary">Free</span>
-                <span className="text-sm text-muted-foreground">· no payment for the item, ever</span>
+                <span className="text-sm text-muted-foreground">· no payment for the item or delivery</span>
               </div>
 
               <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1"><MapPin className="size-4" /> {place}</span>
-                <span className="inline-flex items-center gap-1"><CalendarDays className="size-4" /> {timeAgo(listing.created_at)}</span>
-                {requestCount > 0 && <span className="inline-flex items-center gap-1"><Users className="size-4" /> {requestCount} request{requestCount === 1 ? "" : "s"}</span>}
+                <span className="inline-flex items-center gap-1"><CalendarDays className="size-4" /> <TimeAgo iso={listing.created_at} /></span>
+                {isGone && <span className="inline-flex items-center gap-1 font-semibold text-foreground"><PackageCheck className="size-4" /> Given away</span>}
               </p>
 
               <ItemActions
@@ -165,9 +175,15 @@ export async function ItemPage({ slug }: { slug: string }) {
         <div className="min-w-0 space-y-4">
           <section className="rounded-3xl border border-border bg-card p-5 sm:p-6" aria-labelledby="about-title">
             <h2 id="about-title" className="text-lg font-bold">About this item</h2>
-            <p className="mt-3 whitespace-pre-line leading-relaxed text-foreground/85">{listing.description}</p>
+            <RichTextContent html={listing.description} className="mt-3 leading-relaxed text-foreground/85" />
+            {facts?.known_defects && (
+              <div className="mt-4 flex gap-3 rounded-xl border border-brand-yellow-300 bg-highlight-soft px-4 py-3 text-sm text-highlight-soft-foreground">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <p><strong>Known faults or damage:</strong> <span className="whitespace-pre-line">{facts.known_defects}</span></p>
+              </div>
+            )}
             {listing.fulfillment_notes && (
-              <p className="mt-4 rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground"><strong className="text-foreground">Giver&apos;s note:</strong> {listing.fulfillment_notes}</p>
+              <p className="mt-4 rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground"><strong className="text-foreground">Handling note:</strong> {listing.fulfillment_notes}</p>
             )}
           </section>
 
@@ -187,7 +203,7 @@ export async function ItemPage({ slug }: { slug: string }) {
 
           {listing.is_demo && (
             <p className="text-xs text-muted-foreground">
-              This is demo content shown to illustrate the community. Sign in with your own account to try the request flow.
+              This is demo content shown to illustrate the community. Sign in with your own account to try the checkout.
             </p>
           )}
         </div>
@@ -217,7 +233,7 @@ function CollectionOptions({ hubStates }: { hubStates: NgState[] }) {
       <div className="flex gap-3 p-4">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary"><MapPin className="size-5" /></span>
         <div className="text-sm">
-          <p className="font-bold">Collect at a pickup hub</p>
+          <p className="font-bold">Collect at our pickup hub</p>
           <p className="text-muted-foreground">
             {names.length ? <>Available in {names.join(", ")}.</> : "Pickup hubs are opening soon."}{" "}
             <Link href="/pickup-hubs" className="font-semibold text-primary hover:underline">See hubs</Link>
@@ -227,8 +243,8 @@ function CollectionOptions({ hubStates }: { hubStates: NgState[] }) {
       <div className="flex gap-3 p-4">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-highlight-soft text-highlight-soft-foreground"><Truck className="size-5" /></span>
         <div className="text-sm">
-          <p className="font-bold">Waybill / delivery</p>
-          <p className="text-muted-foreground">Anywhere in Nigeria. Any waybill cost is separate and agreed openly — the item stays free.</p>
+          <p className="font-bold">Free delivery</p>
+          <p className="text-muted-foreground">Anywhere in Nigeria. Gratis Castle delivers at no cost — never pay anyone for an item or its delivery.</p>
         </div>
       </div>
     </div>
@@ -255,7 +271,7 @@ function itemJsonLd(listing: Listing, canonical: string) {
         "@type": "Product",
         "@id": `${canonical}#item`,
         name: listing.title,
-        description: listing.description,
+        description: listing.description_text,
         image: images.length > 0 ? images : undefined,
         itemCondition: ITEM_CONDITION[listing.condition],
         category: listing.category?.name,

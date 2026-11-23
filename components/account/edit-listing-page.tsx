@@ -29,7 +29,7 @@ export function EditListingPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <PageHeading eyebrow="Edit listing" title={data.title} />
       <ListingForm initial={data} onSaved={(listing, message) => {
         toast.success(message);

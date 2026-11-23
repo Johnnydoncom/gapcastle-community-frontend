@@ -1,13 +1,15 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Typeset "Gratis Castle / ALWAYS FREE" lockup that sits beside the logo mark.
- * The tagline is letter-justified so it spans exactly the width of the name,
- * giving a tidy, optically aligned block instead of two ragged lines.
+ * The "GRATIS CASTLE" wordmark that sits beside the GC logo mark, typeset to match
+ * the official lockup (public/brand/logo-lockup-768x553.png): heavy condensed
+ * capitals in the mark's royal blue, with the italic serif tagline
+ * "give freely, receive gratefully" beneath. The tagline is optically sized to the
+ * width of the name so the two lines read as one block.
  */
 export function BrandWordmark({
   inverted = false,
-  tagline = "Always free",
+  tagline = "give freely, receive gratefully",
   className,
 }: {
   inverted?: boolean;
@@ -15,24 +17,22 @@ export function BrandWordmark({
   className?: string;
 }) {
   return (
-    <span className={cn("inline-flex flex-col select-none", className)} aria-hidden="true">
+    <span className={cn("inline-flex select-none flex-col items-stretch", className)} aria-hidden="true">
       <span
         className={cn(
-          "font-display text-[17px] font-bold leading-none tracking-[-0.025em] whitespace-nowrap",
-          inverted ? "text-white" : "text-primary-800",
+          "font-wordmark whitespace-nowrap text-[24px] uppercase leading-[0.9] tracking-[0.04em]",
+          inverted ? "text-white" : "text-brand-royal",
         )}
       >
         Gratis Castle
       </span>
       <span
         className={cn(
-          "mt-[5px] flex justify-between text-[8.5px] font-semibold uppercase leading-none",
-          inverted ? "text-brand-yellow-300" : "text-primary-500",
+          "font-tagline mt-[3px] whitespace-nowrap text-center text-[10px] italic leading-none",
+          inverted ? "text-brand-yellow-300" : "text-foreground/70",
         )}
       >
-        {tagline.split("").map((ch, i) => (
-          <span key={i}>{ch === " " ? " " : ch}</span>
-        ))}
+        {tagline}
       </span>
     </span>
   );

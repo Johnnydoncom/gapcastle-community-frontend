@@ -140,7 +140,7 @@ export function MessagesPage() {
             {selected.request && <span className="hidden sm:block"><RequestStatusBadge status={selected.request.status} /></span>}
             {selected.request && (
               <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
-                <Link href={iAmGiver ? `/account/listings?listing=${selected.listing_id}` : "/account/requests"}>{iAmGiver ? "Manage request" : "View request"}</Link>
+                <Link href={iAmGiver ? `/account/listings?listing=${selected.listing_id}` : "/account/requests"}>{iAmGiver ? "View listing" : "View order"}</Link>
               </Button>
             )}
             <ConversationMenu conversationId={selected.id} onBlock={block} />
@@ -159,7 +159,7 @@ export function MessagesPage() {
                   </div>
                 </div>
               </div>
-            )) : <p className="py-10 text-center text-sm text-muted-foreground">Say hello! Keep every conversation on Gratis Castle — handovers happen at our pickup hubs or by waybill.</p>}
+            )) : <p className="py-10 text-center text-sm text-muted-foreground">Say hello! Keep every conversation on Gratis Castle — handovers happen at our pickup hub or through free Gratis Castle delivery — never pay anyone.</p>}
             <div ref={bottomRef} />
           </div>
           <form onSubmit={sendMessage} className="border-t border-border p-3 sm:p-4">
