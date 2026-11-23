@@ -103,7 +103,7 @@ function Logo({ inverted = false, compact = false }: { inverted?: boolean; compa
         // Dark backgrounds use the official white mark (from the white lockup) — never a box behind the logo.
         <Image src={logoMarkWhite} alt="" className="h-9 w-auto shrink-0" sizes="48px" />
       ) : (
-        <Image src={logoMark} alt="" priority className="h-9 w-auto shrink-0" sizes="48px" />
+        <Image src={logoMark} alt="" priority className="h-7 sm:h-9 w-auto shrink-0" sizes="48px" />
       )}
       <BrandWordmark inverted={inverted} className={cn(compact && "max-[359px]:hidden")} />
     </Link>
