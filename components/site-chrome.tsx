@@ -98,7 +98,7 @@ function isActive(pathname: string, href: string) {
 
 function Logo({ inverted = false, compact = false }: { inverted?: boolean; compact?: boolean }) {
   return (
-    <Link href="/" className="inline-flex shrink-0 items-center gap-2.5" aria-label="Gratis Castle home">
+    <Link href="/" className="inline-flex shrink-0 items-center gap-1.5 sm:gap-2.5" aria-label="Gratis Castle home">
       {inverted ? (
         // Dark backgrounds use the official white mark (from the white lockup) — never a box behind the logo.
         <Image src={logoMarkWhite} alt="" className="h-9 w-auto shrink-0" sizes="48px" />
