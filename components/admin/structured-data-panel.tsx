@@ -85,17 +85,15 @@ const TEMPLATES: Array<{ key: string; label: string; site?: boolean; build: () =
   },
   {
     key: "organization",
-    label: "Organization (replaces the built-in one)",
+    label: "Organization details (updates the built-in one)",
     site: true,
     build: () => ({
       "@context": "https://schema.org",
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
-      name: "Gratis Castle",
-      url: SITE_URL,
-      logo: absoluteUrl("/brand/logo-lockup-768x553.png"),
+      legalName: "Registered company name",
       foundingDate: "2026",
-      sameAs: ["https://www.instagram.com/your-profile"],
+      slogan: "Give freely. Receive gratefully.",
     }),
   },
 ];
@@ -173,7 +171,7 @@ export function StructuredDataPanel({ pageKey, path, text, onChange, actions, se
             <p className="text-xs text-muted-foreground">Nothing built in for this page.</p>
           )}
           <p className="mt-2 text-xs text-muted-foreground">
-            A custom item with the same <code className="font-mono">@id</code> or <code className="font-mono">@type</code> as a built-in one replaces it; anything else is added.
+            A custom item with the same <code className="font-mono">@id</code> or <code className="font-mono">@type</code> as a built-in one updates it — your properties win, the rest is kept, and a property set to <code className="font-mono">null</code> is removed. Anything else is added.
             {pageKey !== "site" && " Organization, WebSite and LocalBusiness are site-wide — edit them under “Site-wide (every page)”."}
           </p>
         </div>
@@ -205,10 +203,10 @@ export function StructuredDataPanel({ pageKey, path, text, onChange, actions, se
 
         {error ? (
           <p className="flex items-start gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive"><AlertTriangle className="mt-0.5 size-3.5 shrink-0" /> {error}</p>
-        ) : merge && (merge.replaced.length || merge.added.length) ? (
+        ) : merge && (merge.updated.length || merge.added.length) ? (
           <div className="rounded-lg bg-success-soft px-3 py-2 text-xs text-success">
             <p className="flex items-center gap-2 font-semibold"><CheckCircle2 className="size-3.5" /> Valid schema.org JSON-LD</p>
-            {merge.replaced.length > 0 && <p className="mt-1">Replaces built-in: <span className="font-mono">{merge.replaced.join(", ")}</span></p>}
+            {merge.updated.length > 0 && <p className="mt-1">Updates built-in: <span className="font-mono">{merge.updated.join(", ")}</span></p>}
             {merge.added.length > 0 && <p className="mt-0.5">Adds: <span className="font-mono">{merge.added.join(", ")}</span></p>}
           </div>
         ) : (

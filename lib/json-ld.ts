@@ -41,35 +41,42 @@ export function nodeTypes(node: JsonLdNode): string[] {
   return (Array.isArray(type) ? type : [type]).filter((value): value is string => typeof value === "string");
 }
 
+/** Drop properties set to null — that is how an admin removes a built-in property. */
+function withoutNulls(node: JsonLdNode): JsonLdNode {
+  return Object.fromEntries(Object.entries(node).filter(([, value]) => value !== null));
+}
+
 /**
  * Merge custom nodes from Admin › Pages & SEO into a page's built-in nodes.
- * A custom node replaces the built-in node with the same `@id`, otherwise the first
- * built-in node with the same `@type`; anything else is added to the page.
+ * A custom node updates the built-in node with the same `@id`, otherwise the first
+ * built-in node with the same `@type`: its properties win, untouched built-in
+ * properties (contact details, social links…) are kept, and a property set to
+ * null is removed. Anything else is added to the page.
  */
 export function mergeJsonLd(builtIn: JsonLdNode[], custom: JsonLdNode[]) {
   const nodes = [...builtIn];
-  const replacedIndexes = new Set<number>();
-  const replaced: string[] = [];
+  const matchedIndexes = new Set<number>();
+  const updated: string[] = [];
   const added: string[] = [];
 
   for (const node of custom) {
     const id = typeof node["@id"] === "string" ? node["@id"] : null;
     const types = nodeTypes(node);
-    let index = id ? nodes.findIndex((candidate, position) => !replacedIndexes.has(position) && candidate["@id"] === id) : -1;
+    let index = id ? nodes.findIndex((candidate, position) => position < builtIn.length && !matchedIndexes.has(position) && candidate["@id"] === id) : -1;
     if (index === -1) {
-      index = nodes.findIndex((candidate, position) => position < builtIn.length && !replacedIndexes.has(position) && nodeTypes(candidate).some((type) => types.includes(type)));
+      index = nodes.findIndex((candidate, position) => position < builtIn.length && !matchedIndexes.has(position) && nodeTypes(candidate).some((type) => types.includes(type)));
     }
     if (index !== -1) {
-      nodes[index] = node;
-      replacedIndexes.add(index);
-      replaced.push(types.join(" / "));
+      nodes[index] = withoutNulls({ ...nodes[index], ...node });
+      matchedIndexes.add(index);
+      updated.push(types.join(" / "));
     } else {
-      nodes.push(node);
+      nodes.push(withoutNulls(node));
       added.push(types.join(" / "));
     }
   }
 
-  return { nodes, replaced, added };
+  return { nodes, updated, added };
 }
 
 /** One problem with custom JSON-LD, mirroring the API's validation (App\Support\StructuredData). */
