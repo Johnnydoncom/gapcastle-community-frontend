@@ -106,8 +106,8 @@ const HERO_SLIDES: HeroSlide[] = [
   {
     key: "free",
     eyebrow: "Free community marketplace",
-    title: "Give or pick an item",
-    highlight: "for free.",
+    title: "Give with kindness.",
+    highlight: "Receive with care.",
     text: "Useful things shared by people across Nigeria. Check out in seconds — the item and delivery cost ₦0.",
     image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=70",
     imagePosition: "50% 62%",
