@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { AdminLocationsPage } from "@/components/admin/locations-page";
+import { Suspense } from "react";
+import { AdminLocationsPage } from "@/components/admin/geography-admin";
 
-export const metadata: Metadata = {
-  title: "Pickup locations",
-  description: "Manage Nigerian states and Gratis Castle pickup hubs.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: "Pickup hubs", robots: { index: false, follow: false } };
 
 export default function Page() {
-  return <AdminLocationsPage />;
+  return (
+    <Suspense fallback={null}>
+      <AdminLocationsPage />
+    </Suspense>
+  );
 }

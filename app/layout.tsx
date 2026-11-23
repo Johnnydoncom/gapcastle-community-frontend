@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Anton, Inter, Lora } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { PwaRegister } from "@/components/pwa/pwa-register";
-import { JsonLd } from "@/components/seo/json-ld";
-import { siteJsonLd, localBusinessJsonLd } from "@/lib/seo";
+import { SiteJsonLd } from "@/components/seo/site-json-ld";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -77,8 +76,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         <Providers>{children}</Providers>
         <PwaRegister />
-        <JsonLd data={siteJsonLd()} />
-        <JsonLd data={localBusinessJsonLd()} />
+        <SiteJsonLd />
       </body>
     </html>
   );

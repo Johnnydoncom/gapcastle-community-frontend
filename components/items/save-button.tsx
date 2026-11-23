@@ -31,7 +31,7 @@ export function SaveButton({ listingId, listingSlug, saved = false, onSavedChang
 
     if (!userId) {
       toast.info("Sign in to save items to your list");
-      router.push(`/auth?next=${encodeURIComponent(listingPath(listingSlug))}`);
+      router.push(`/login?next=${encodeURIComponent(listingPath(listingSlug))}`);
       return;
     }
 

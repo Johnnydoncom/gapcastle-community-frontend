@@ -20,6 +20,13 @@ export type SeoPageData = {
   /** Custom JSON-LD overrides injected alongside auto-generated structured data. */
   structured_data: Record<string, unknown> | null;
   keywords: string | null;
+  /** Editable content for the information pages; null keeps the built-in text. */
+  content_heading?: string | null;
+  content_intro?: string | null;
+  /** Sanitised rich text (HTML). */
+  content_body?: string | null;
+  /** Only in the admin list. */
+  has_content?: boolean;
   updated_at: string;
 };
 

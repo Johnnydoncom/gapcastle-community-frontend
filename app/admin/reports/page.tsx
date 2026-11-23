@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { AdminReportsPage } from "@/components/admin/moderation-pages";
+import { Suspense } from "react";
+import { AdminReportsPage } from "@/components/admin/community-admin";
 
-export const metadata: Metadata = {
-  title: "Reports",
-  description: "Review member reports.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: "Reports", robots: { index: false, follow: false } };
 
 export default function Page() {
-  return <AdminReportsPage />;
+  return (
+    <Suspense fallback={null}>
+      <AdminReportsPage />
+    </Suspense>
+  );
 }

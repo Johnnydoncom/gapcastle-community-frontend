@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { withSeoOverrides } from "@/lib/server/page-metadata";
 import { HomePage } from "@/components/routes/home-page";
-import { JsonLd } from "@/components/seo/json-ld";
+import { PageJsonLd } from "@/components/seo/page-json-ld";
 import { howItWorksJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   title: { absolute: "Gratis Castle — Free items in Nigeria | Give freely, receive gratefully" },
   description: "Nigeria's free community marketplace. Find useful things shared for free by neighbours, give away what you no longer need, and collect safely from our Lagos pickup hub or get it delivered free anywhere in Nigeria.",
   alternates: { canonical: "/" },
@@ -14,12 +15,22 @@ export const metadata: Metadata = {
   },
 };
 
+/** Built-in metadata, with any overrides saved in Admin › Pages & SEO on top. */
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverrides("home", baseMetadata);
+}
+
 export default function Page() {
   return (
     <>
       <HomePage />
-      <JsonLd data={howItWorksJsonLd()} />
-      <JsonLd data={breadcrumbJsonLd([{ name: "Home", url: "/" }])} />
+      <PageJsonLd
+        pageKey="home"
+        data={[
+          howItWorksJsonLd(),
+          breadcrumbJsonLd([{ name: "Home", url: "/" }]),
+        ]}
+      />
     </>
   );
 }

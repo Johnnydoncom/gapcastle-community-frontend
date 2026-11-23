@@ -8,7 +8,7 @@
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL, absoluteUrl } from "@/lib/site";
 import type { SeoPageData } from "@/lib/seo-types";
-import type { Category, CommunityStats, Listing, PublicProfile } from "@/lib/types";
+import type { Category, CommunityStats, Listing, PublicProfile, SiteInfo } from "@/lib/types";
 import type { ContentPageData } from "@/lib/content";
 
 /* -------------------------------------------------------------------------- */
@@ -108,7 +108,33 @@ function parseRobotsString(robots: string): Metadata["robots"] {
 /*  JSON-LD: Organization + WebSite (homepage / root layout)                   */
 /* -------------------------------------------------------------------------- */
 
-export function organizationJsonLd() {
+const SOCIAL_KEYS = ["social_facebook", "social_instagram", "social_x", "social_linkedin", "social_tiktok", "social_youtube"] as const;
+
+/** Social profile URLs from Admin › Settings (https only), for `sameAs`. */
+export function socialProfiles(site?: SiteInfo | null): string[] {
+  return SOCIAL_KEYS.map((key) => site?.[key] ?? "").filter((url) => url.startsWith("https://"));
+}
+
+/** E.164-style phone for structured data, e.g. "+234 803 123 4567" → "+2348031234567". */
+function schemaPhone(phone?: string | null): string | undefined {
+  const digits = (phone ?? "").replace(/[^\d+]/g, "");
+  if (digits.replace(/\D/g, "").length < 7) return undefined;
+  return digits.startsWith("0") ? `+234${digits.slice(1)}` : digits;
+}
+
+function postalAddress(site?: SiteInfo | null) {
+  return {
+    "@type": "PostalAddress",
+    ...(site?.office_address ? { streetAddress: site.office_address } : {}),
+    addressRegion: "Lagos",
+    addressCountry: "NG",
+  };
+}
+
+/** Contact details and social profiles come from Admin › Settings, so the schema always matches the site. */
+export function organizationJsonLd(site?: SiteInfo | null) {
+  const telephone = schemaPhone(site?.contact_phone);
+  const email = site?.contact_email || undefined;
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -121,19 +147,27 @@ export function organizationJsonLd() {
       width: DEFAULT_OG_IMAGE_WIDTH,
       height: DEFAULT_OG_IMAGE_HEIGHT,
     },
-    description: SITE_TAGLINE,
-    sameAs: [],
+    description: site?.footer_about || SITE_TAGLINE,
+    ...(email ? { email } : {}),
+    ...(telephone ? { telephone } : {}),
+    sameAs: socialProfiles(site),
+    ...(email || telephone
+      ? {
+          contactPoint: [{
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            ...(email ? { email } : {}),
+            ...(telephone ? { telephone } : {}),
+            areaServed: "NG",
+            availableLanguage: ["English"],
+          }],
+        }
+      : {}),
     areaServed: {
       "@type": "Country",
       name: "Nigeria",
     },
-    foundingLocation: {
-      "@type": "Place",
-      address: {
-        "@type": "PostalAddress",
-        addressCountry: "NG",
-      },
-    },
+    address: postalAddress(site),
   };
 }
 
@@ -158,11 +192,11 @@ export function websiteJsonLd() {
   };
 }
 
-/** Combined Organization + WebSite graph for the root layout. */
-export function siteJsonLd() {
+/** Site-wide graph for the root layout: Organization, WebSite and LocalBusiness. */
+export function siteJsonLd(site?: SiteInfo | null) {
   return {
     "@context": "https://schema.org",
-    "@graph": [organizationJsonLd(), websiteJsonLd()],
+    "@graph": [organizationJsonLd(site), websiteJsonLd(), localBusinessJsonLd(site)],
   };
 }
 
@@ -336,7 +370,8 @@ export function contactPageJsonLd() {
 /*  JSON-LD: LocalBusiness — Nigeria geo-targeting                             */
 /* -------------------------------------------------------------------------- */
 
-export function localBusinessJsonLd() {
+export function localBusinessJsonLd(site?: SiteInfo | null) {
+  const telephone = schemaPhone(site?.contact_phone);
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -345,11 +380,11 @@ export function localBusinessJsonLd() {
     description: "Free community marketplace in Nigeria. Give freely, receive gratefully.",
     url: SITE_URL,
     image: absoluteUrl(DEFAULT_OG_IMAGE),
-    address: {
-      "@type": "PostalAddress",
-      addressCountry: "NG",
-      addressRegion: "Lagos",
-    },
+    parentOrganization: { "@id": `${SITE_URL}/#organization` },
+    ...(telephone ? { telephone } : {}),
+    ...(site?.contact_email ? { email: site.contact_email } : {}),
+    ...(socialProfiles(site).length ? { sameAs: socialProfiles(site) } : {}),
+    address: postalAddress(site),
     geo: {
       "@type": "GeoCoordinates",
       latitude: 6.5244,

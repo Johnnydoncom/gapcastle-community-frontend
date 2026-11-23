@@ -54,7 +54,13 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     // "Home & Kitchen" was split into "Home & Living" and "Kitchen & Dining" (2026-11-23).
-    return [{ source: "/categories/home-kitchen", destination: "/categories/home-living", permanent: true }];
+    return [
+      { source: "/categories/home-kitchen", destination: "/categories/home-living", permanent: true },
+      // The old combined /auth page became /login and /register (2026-11-23). The query string
+      // (including ?next=) is carried over automatically.
+      { source: "/auth", has: [{ type: "query", key: "mode", value: "join" }], destination: "/register", permanent: true },
+      { source: "/auth", destination: "/login", permanent: true },
+    ];
   },
   async headers() {
     return [

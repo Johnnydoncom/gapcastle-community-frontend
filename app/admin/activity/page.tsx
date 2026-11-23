@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AdminActivityPage } from "@/components/admin/management-pages";
 
-export const metadata: Metadata = {
-  title: "Activity",
-  description: "Recent platform activity.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: "Activity log", robots: { index: false, follow: false } };
 
 export default function Page() {
-  return <AdminActivityPage />;
+  return (
+    <Suspense fallback={null}>
+      <AdminActivityPage />
+    </Suspense>
+  );
 }

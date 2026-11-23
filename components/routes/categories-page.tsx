@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { ExploreFilters } from "@/lib/explore";
 import { categoryIcon } from "@/lib/gapcastle";
 import { ServerApiError, getCategories, getCategory } from "@/lib/server/api";
+import { JsonLd } from "@/components/seo/json-ld";
 import { absoluteUrl, categoryPath } from "@/lib/site";
 import type { Category } from "@/lib/types";
 
@@ -18,37 +19,18 @@ export async function CategoriesPage() {
 
   return (
     <div className="container-page py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "CollectionPage",
-                name: "Browse categories",
-                url: absoluteUrl("/categories"),
-                description: "Find free furniture, electronics, clothing, books, baby items and more by category.",
-              },
-              {
-                "@type": "BreadcrumbList",
-                itemListElement: [
-                  { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
-                  { "@type": "ListItem", position: 2, name: "Categories", item: absoluteUrl("/categories") },
-                ],
-              },
-              {
-                "@type": "ItemList",
-                numberOfItems: categories.length,
-                itemListElement: categories.map((category, index) => ({
-                  "@type": "ListItem",
-                  position: index + 1,
-                  name: category.name,
-                  url: absoluteUrl(categoryPath(category.slug)),
-                })),
-              },
-            ],
-          }),
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Free item categories",
+          numberOfItems: categories.length,
+          itemListElement: categories.map((category, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: category.name,
+            url: absoluteUrl(categoryPath(category.slug)),
+          })),
         }}
       />
 

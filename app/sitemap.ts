@@ -17,6 +17,8 @@ const STATIC_ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitema
   { path: "/safety", changeFrequency: "yearly", priority: 0.4 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.5 },
   { path: "/contact", changeFrequency: "yearly", priority: 0.4 },
+  { path: "/register", changeFrequency: "yearly", priority: 0.5 },
+  { path: "/login", changeFrequency: "yearly", priority: 0.3 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];

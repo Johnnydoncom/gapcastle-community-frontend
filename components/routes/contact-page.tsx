@@ -1,9 +1,15 @@
-import { Mail, Phone, ShieldAlert } from "lucide-react";
+import { Clock, Mail, MapPin, MessageCircle, Phone, ShieldAlert } from "lucide-react";
 import { Suspense } from "react";
 import { ContactForm } from "@/components/contact/contact-form";
+import { DEFAULT_EMAIL, whatsappLink } from "@/components/site/footer-info";
+import { getSiteInfo } from "@/lib/server/api";
 
-/** Server-rendered contact page; only the form is a client island. */
-export function ContactPage() {
+/** Server-rendered contact page; only the form is a client island. Contact details come from Admin › Settings. */
+export async function ContactPage() {
+  const site = await getSiteInfo().then((response) => response.data).catch(() => null);
+  const email = site?.contact_email || DEFAULT_EMAIL;
+  const phone = site ? site.contact_phone : "+234 201 887 6442";
+  const whatsapp = site?.whatsapp_number ? whatsappLink(site.whatsapp_number) : null;
   return (
     <div className="container-page py-10">
       <p className="text-sm font-semibold text-primary">Contact us</p>
@@ -16,9 +22,31 @@ export function ContactPage() {
         <aside className="space-y-4">
           <div className="rounded-2xl bg-cream p-6">
             <p className="flex items-center gap-2 font-semibold"><Mail className="size-4 text-primary" /> Email</p>
-            <a href="mailto:info@gapcastle.com" className="mt-1 block text-muted-foreground hover:text-primary">info@gapcastle.com</a>
-            <p className="mt-4 flex items-center gap-2 font-semibold"><Phone className="size-4 text-primary" /> Phone</p>
-            <a href="tel:+2342018876442" className="mt-1 block text-muted-foreground hover:text-primary">+234 201 887 6442</a>
+            <a href={`mailto:${email}`} className="mt-1 block text-muted-foreground hover:text-primary">{email}</a>
+            {phone && (
+              <>
+                <p className="mt-4 flex items-center gap-2 font-semibold"><Phone className="size-4 text-primary" /> Phone</p>
+                <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="mt-1 block text-muted-foreground hover:text-primary">{phone}</a>
+              </>
+            )}
+            {whatsapp && site && (
+              <>
+                <p className="mt-4 flex items-center gap-2 font-semibold"><MessageCircle className="size-4 text-primary" /> WhatsApp</p>
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="mt-1 block text-muted-foreground hover:text-primary">{site.whatsapp_number}</a>
+              </>
+            )}
+            {site?.support_hours && (
+              <>
+                <p className="mt-4 flex items-center gap-2 font-semibold"><Clock className="size-4 text-primary" /> Support hours</p>
+                <p className="mt-1 text-muted-foreground">{site.support_hours}</p>
+              </>
+            )}
+            {site?.office_address && (
+              <>
+                <p className="mt-4 flex items-center gap-2 font-semibold"><MapPin className="size-4 text-primary" /> Office</p>
+                <p className="mt-1 text-muted-foreground">{site.office_address}</p>
+              </>
+            )}
           </div>
           <div className="rounded-2xl border border-border bg-card p-6">
             <p className="flex items-center gap-2 font-semibold"><ShieldAlert className="size-4 text-primary" /> Feel unsafe?</p>

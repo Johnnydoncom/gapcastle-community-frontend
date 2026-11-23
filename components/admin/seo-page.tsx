@@ -12,7 +12,9 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader, Panel, errorMessage } from "@/components/admin/ui";
+import { PageHeader, Panel, errorMessage, fieldErrors } from "@/components/admin/ui";
+import { StructuredDataPanel, parseStructuredData } from "@/components/admin/structured-data-panel";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
@@ -24,7 +26,14 @@ import type { SeoPageData, SeoPagePayload } from "@/lib/seo-types";
 /*  Known page keys — the well-known pages whose SEO can be managed            */
 /* -------------------------------------------------------------------------- */
 
+/** Information pages whose wording can be edited here (see components/content-page.tsx). */
+const CONTENT_KEYS = new Set(["how-it-works", "about", "community-guidelines", "safety", "faq", "privacy", "terms"]);
+
+/** Structured data that applies to every page (components/seo/site-json-ld.tsx). */
+const SITE_KEY = "site";
+
 const KNOWN_PAGES: Array<{ key: string; label: string; path: string }> = [
+  { key: SITE_KEY, label: "Site-wide (every page)", path: "/" },
   { key: "home", label: "Home", path: "/" },
   { key: "explore", label: "Explore", path: "/explore" },
   { key: "categories", label: "Categories", path: "/categories" },
@@ -54,6 +63,9 @@ const EMPTY_ENTRY: SeoPagePayload = {
   robots: null,
   structured_data: null,
   keywords: null,
+  content_heading: null,
+  content_intro: null,
+  content_body: null,
 };
 
 /* ========================================================================== */
@@ -67,6 +79,7 @@ export function AdminSeoPage() {
 
   const [editing, setEditing] = useState<SeoEntry | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -100,15 +113,14 @@ export function AdminSeoPage() {
 
   async function handleSave(form: SeoPagePayload) {
     setSaving(true);
+    setSaveError({});
     try {
-      const isNew = editing?._isNew;
-      const method = isNew ? api.post : api.put;
-      const path = isNew ? "admin/seo-pages" : `admin/seo-pages/${form.page_key}`;
-      const res = await method<{ data: SeoPageData; message: string }>(path, form);
+      const res = await api.put<{ data: SeoPageData; message: string }>(`admin/seo-pages/${encodeURIComponent(form.page_key)}`, form);
       queryClient.invalidateQueries({ queryKey: ["admin-seo-pages"] });
       toast.success(res.message || "SEO settings saved.");
       setEditing(null);
     } catch (err) {
+      setSaveError(fieldErrors(err));
       toast.error(errorMessage(err, "Could not save SEO settings."));
     } finally {
       setSaving(false);
@@ -118,16 +130,17 @@ export function AdminSeoPage() {
   return (
     <div className="max-w-5xl">
       <PageHeader
-        title="SEO settings"
-        description="Manage meta titles, descriptions, Open Graph tags and structured data for every page. Changes update within 60 seconds."
+        title="Pages & SEO"
+        description="Edit the wording of the information pages and manage meta titles, descriptions, share images and structured data for every page. Changes go live within about a minute."
       />
 
       {editing ? (
         <SeoEditor
           entry={editing}
           saving={saving}
+          serverErrors={saveError}
           onSave={handleSave}
-          onCancel={() => setEditing(null)}
+          onCancel={() => { setEditing(null); setSaveError({}); }}
         />
       ) : (
         <>
@@ -178,9 +191,14 @@ export function AdminSeoPage() {
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-2">
+                        {CONTENT_KEYS.has(row.key) && (
+                          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold", row.entry?.has_content ? "bg-primary-50 text-primary-700" : "bg-muted text-muted-foreground")}>
+                            {row.entry?.has_content ? "Custom content" : "Default content"}
+                          </span>
+                        )}
                         {configured && (
                           <span className="rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-bold text-success">
-                            Configured
+                            SEO configured
                           </span>
                         )}
                         {configured && row.entry?.updated_at && (
@@ -242,11 +260,13 @@ export function AdminSeoPage() {
 function SeoEditor({
   entry,
   saving,
+  serverErrors,
   onSave,
   onCancel,
 }: {
   entry: SeoEntry;
   saving: boolean;
+  serverErrors: Record<string, string>;
   onSave: (form: SeoPagePayload) => void;
   onCancel: () => void;
 }) {
@@ -261,13 +281,16 @@ function SeoEditor({
     robots: entry.robots ?? "index,follow",
     structured_data: entry.structured_data ?? null,
     keywords: entry.keywords ?? "",
+    content_heading: entry.content_heading ?? "",
+    content_intro: entry.content_intro ?? "",
+    content_body: entry.content_body ?? "",
   });
 
   const [structuredDataText, setStructuredDataText] = useState(
     entry.structured_data ? JSON.stringify(entry.structured_data, null, 2) : "",
   );
-  const [jsonError, setJsonError] = useState<string | null>(null);
 
+  const isSiteWide = entry.page_key === SITE_KEY;
   const knownPage = KNOWN_PAGES.find((p) => p.key === entry.page_key);
   const pageLabel = knownPage?.label ?? entry.page_key;
   const titleCharCount = (form.meta_title ?? "").length;
@@ -280,16 +303,10 @@ function SeoEditor({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Parse structured data JSON
-    let parsedJson: Record<string, unknown> | null = null;
-    if (structuredDataText.trim()) {
-      try {
-        parsedJson = JSON.parse(structuredDataText);
-        setJsonError(null);
-      } catch {
-        setJsonError("Invalid JSON — please fix the syntax.");
-        return;
-      }
+    const structured = parseStructuredData(structuredDataText);
+    if (structured.error) {
+      toast.error("Fix the structured data before saving.");
+      return;
     }
 
     onSave({
@@ -302,12 +319,52 @@ function SeoEditor({
       canonical_url: form.canonical_url || null,
       robots: form.robots || null,
       keywords: form.keywords || null,
-      structured_data: parsedJson,
+      content_heading: form.content_heading || null,
+      content_intro: form.content_intro || null,
+      content_body: form.content_body || null,
+      structured_data: (structured.value as SeoPagePayload["structured_data"]) ?? null,
     });
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {CONTENT_KEYS.has(entry.page_key) && (
+        <Panel
+          title={`Page content — ${pageLabel}`}
+          description="Leave the body empty to keep the built-in text. Anything you write here replaces the page's main content."
+        >
+          <div className="space-y-5">
+            <Field label="Heading" hint="The big title at the top of the page. Leave blank for the default.">
+              <input
+                type="text"
+                value={form.content_heading ?? ""}
+                onChange={(e) => update("content_heading", e.target.value)}
+                maxLength={160}
+                className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none transition-colors focus:border-primary"
+              />
+            </Field>
+            <Field label="Introduction" hint="The short paragraph under the heading.">
+              <textarea
+                value={form.content_intro ?? ""}
+                onChange={(e) => update("content_intro", e.target.value)}
+                maxLength={600}
+                rows={2}
+                className="w-full resize-y rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
+              />
+            </Field>
+            <div>
+              <p className="mb-1.5 text-sm font-semibold">Body</p>
+              <RichTextEditor
+                value={form.content_body ?? ""}
+                onChange={(html, text) => update("content_body", text.trim() ? html : "")}
+                placeholder="Write the page content — use headings, lists and links."
+                maxLength={60000}
+              />
+            </div>
+          </div>
+        </Panel>
+      )}
+      {!isSiteWide && (
       <Panel
         title={`SEO — ${pageLabel}`}
         description={knownPage ? `Path: ${knownPage.path}` : `Key: ${entry.page_key}`}
@@ -338,7 +395,7 @@ function SeoEditor({
               placeholder="Compelling description for search result snippets"
               maxLength={320}
               rows={3}
-              className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none transition-colors focus:border-primary resize-none"
+              className="w-full resize-y rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none transition-colors focus:border-primary"
             />
           </Field>
 
@@ -406,7 +463,7 @@ function SeoEditor({
             <select
               value={form.robots ?? "index,follow"}
               onChange={(e) => update("robots", e.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none transition-colors focus:border-primary"
+              className="select-caret h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none transition-colors focus:border-primary"
             >
               <option value="index,follow">index, follow (default)</option>
               <option value="noindex,follow">noindex, follow</option>
@@ -417,21 +474,6 @@ function SeoEditor({
 
           <hr className="border-border" />
 
-          {/* Structured data */}
-          <Field label="Custom structured data (JSON-LD)" hint="Injected alongside auto-generated schema. Must be valid JSON.">
-            <textarea
-              value={structuredDataText}
-              onChange={(e) => {
-                setStructuredDataText(e.target.value);
-                setJsonError(null);
-              }}
-              placeholder={'{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  …\n}'}
-              rows={6}
-              className={cn("w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none transition-colors focus:border-primary resize-y font-mono text-xs", jsonError && "border-destructive")}
-            />
-            {jsonError && <p className="mt-1 text-xs text-destructive">{jsonError}</p>}
-          </Field>
-
           {/* Google SERP preview */}
           <SerpPreview
             title={form.meta_title || pageLabel}
@@ -439,8 +481,23 @@ function SeoEditor({
             path={knownPage?.path ?? `/${entry.page_key}`}
           />
         </div>
+      </Panel>
+      )}
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+      <StructuredDataPanel
+        pageKey={entry.page_key}
+        path={knownPage?.path ?? `/${entry.page_key}`}
+        text={structuredDataText}
+        onChange={setStructuredDataText}
+        serverError={serverErrors.structured_data}
+        actions={isSiteWide ? (
+          <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-foreground" aria-label="Close">
+            <X className="size-5" />
+          </button>
+        ) : undefined}
+      />
+
+      <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/95 px-5 py-3 shadow-soft backdrop-blur">
           <p className="text-xs text-muted-foreground">
             Changes apply to the next page render (cached up to 60 seconds).
           </p>
@@ -450,11 +507,10 @@ function SeoEditor({
             </Button>
             <Button type="submit" disabled={saving}>
               <Save className="size-4" />
-              {saving ? "Saving…" : "Save SEO settings"}
+              {saving ? "Saving…" : isSiteWide ? "Save structured data" : "Save page"}
             </Button>
           </div>
         </div>
-      </Panel>
     </form>
   );
 }

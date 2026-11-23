@@ -41,7 +41,7 @@ export async function CommunityPage() {
           <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">Small Acts of Giving. Big Community Impact.</h1>
           <p className="mt-4 max-w-2xl text-lg text-background/80">Gratis Castle is made of neighbours who give freely, receive gratefully and look out for one another.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg" variant="highlight"><Link href="/auth?mode=join">Join the Community</Link></Button>
+            <Button asChild size="lg" variant="highlight"><Link href="/register">Join the Community</Link></Button>
             <Button asChild size="lg" variant="outline" className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"><Link href="/give">Give something away</Link></Button>
           </div>
         </div>

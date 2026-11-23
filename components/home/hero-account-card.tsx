@@ -27,8 +27,8 @@ export function HeroAccountCard() {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Link href="/auth" className="inline-flex h-10 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-700">Sign in</Link>
-          <Link href="/auth?mode=join" className="inline-flex h-10 items-center justify-center rounded-xl border border-border text-sm font-semibold transition-colors hover:border-primary-200 hover:bg-primary-50">Join free</Link>
+          <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-700">Sign in</Link>
+          <Link href="/register" className="inline-flex h-10 items-center justify-center rounded-xl border border-border text-sm font-semibold transition-colors hover:border-primary-200 hover:bg-primary-50">Join free</Link>
         </div>
       </div>
     );

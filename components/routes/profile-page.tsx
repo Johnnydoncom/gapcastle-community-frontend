@@ -7,7 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toListingRow } from "@/lib/gapcastle";
 import { ServerApiError, getProfile } from "@/lib/server/api";
-import { absoluteUrl, profilePath } from "@/lib/site";
+import { profilePath } from "@/lib/site";
 import { memberSince } from "@/lib/utils";
 
 /**
@@ -27,7 +27,6 @@ export async function ProfilePage({ slug }: { slug: string }) {
   }
 
   const member = profile.data;
-  const canonicalSlug = member.slug || String(member.id);
 
   if (member.slug && member.slug !== slug) {
     permanentRedirect(profilePath(member.slug));
@@ -37,22 +36,6 @@ export async function ProfilePage({ slug }: { slug: string }) {
 
   return (
     <div className="container-page py-8 sm:py-12">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Person",
-            name: member.name,
-            url: absoluteUrl(profilePath(canonicalSlug)),
-            image: member.avatar_url ?? undefined,
-            description: member.bio ?? undefined,
-            homeLocation: member.location ? { "@type": "Place", name: member.location } : undefined,
-            memberOf: { "@type": "Organization", name: "Gratis Castle" },
-          }),
-        }}
-      />
-
       <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary">Home</Link>
         <span aria-hidden="true">/</span>

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDeferredValue, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Ban, ExternalLink, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { DataTable, Field, FilterSelect, PageHeader, Pagination, Pill, RowActions, SearchInput, Toolbar, errorMessage, useConfirm } from "@/components/admin/ui";
+import { useAllStates } from "@/components/admin/geography-admin";
+import { DataTable, Field, FilterSelect, PageHeader, Pagination, Pill, RowActions, SearchInput, TableCard, Toolbar, errorMessage, fieldErrors, useConfirm, useTableState, type PageMeta } from "@/components/admin/ui";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,7 +16,6 @@ import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/gapcastle";
 import { profilePath } from "@/lib/site";
-import type { NgState } from "@/lib/types";
 
 type Role = "member" | "moderator" | "admin";
 type AdminUser = {
@@ -24,11 +23,12 @@ type AdminUser = {
   email: string; avatar_url: string | null; role: Role; adult_confirmed: boolean;
   possible_duplicates: { id: number; name: string; slug: string | null; reason: string }[];
   email_verified: boolean; is_demo: boolean; suspended_at: string | null; suspension_reason: string | null;
-  location: string | null; state_id: number | null; state: string | null; phone: string | null;
+  location: string | null; state_id: number | null; state: string | null; lga_id: number | null; lga: string | null; phone: string | null;
   listings_count: number; requests_count: number; created_at: string;
 };
-type Page = { data: AdminUser[]; meta: { current_page: number; last_page: number; total: number } };
-type FormState = { id?: number; first_name: string; middle_name: string; last_name: string; email: string; password: string; role: Role; location: string; state_id: string; phone: string; email_verified: boolean };
+type Page = { data: AdminUser[]; meta: PageMeta };
+type FormState = { id?: number; first_name: string; middle_name: string; last_name: string; email: string; password: string; role: Role; location: string; state_id: string; lga_id: string; phone: string; email_verified: boolean };
+type StateOption = { id: number; name: string };
 
 const ROLE_LABEL: Record<Role, string> = { member: "Member", moderator: "Moderator", admin: "Administrator" };
 
@@ -37,27 +37,19 @@ const ROLE_LABEL: Record<Role, string> = { member: "Member", moderator: "Moderat
  * and moderators. Admins can create, edit, suspend and delete accounts.
  */
 export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
-  const params = useSearchParams();
   const { user: me } = useSession();
   const isAdmin = !!me?.is_admin;
   const queryClient = useQueryClient();
   const { confirm, element: confirmDialog } = useConfirm();
-  const [q, setQ] = useState("");
-  const [filter, setFilter] = useState(scope === "staff" ? "staff" : params.get("filter") ?? "");
-  const [page, setPage] = useState(1);
+  const table = useTableState({ filter: scope === "staff" ? "staff" : "" }, 25);
   const [form, setForm] = useState<FormState | null>(null);
-  const search = useDeferredValue(q);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-users", search, filter, page],
-    queryFn: () => api.get<Page>("admin/users", { q: search || undefined, filter: filter || undefined, page }),
+    queryKey: ["admin-users", scope, table.query],
+    queryFn: () => api.get<Page>("admin/users", table.query),
     placeholderData: (previous) => previous,
   });
-  const { data: states } = useQuery({
-    queryKey: ["states"],
-    queryFn: () => api.get<{ data: NgState[] }>("states").then((response) => response.data),
-    staleTime: 5 * 60_000,
-  });
+  const { data: states } = useAllStates();
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
 
@@ -71,7 +63,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
     }
   }
 
-  const blank: FormState = { first_name: "", middle_name: "", last_name: "", email: "", password: "", role: scope === "staff" ? "moderator" : "member", location: "", state_id: "", phone: "", email_verified: true };
+  const blank: FormState = { first_name: "", middle_name: "", last_name: "", email: "", password: "", role: scope === "staff" ? "moderator" : "member", location: "", state_id: "", lga_id: "", phone: "", email_verified: true };
   const title = scope === "staff" ? "Admins & moderators" : "Members";
 
   return (
@@ -82,11 +74,11 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
         actions={isAdmin && <Button onClick={() => setForm(blank)}><Plus className="size-4" /> {scope === "staff" ? "Add staff account" : "Add member"}</Button>}
       />
 
-      <div className="rounded-2xl border border-border bg-card shadow-soft">
+      <TableCard>
         <Toolbar>
-          <SearchInput value={q} onChange={(value) => { setQ(value); setPage(1); }} placeholder="Search name or email" />
+          <SearchInput value={table.q} onChange={table.setQ} placeholder="Search name or email" />
           {scope === "members" && (
-            <FilterSelect label="Filter" value={filter} onChange={(value) => { setFilter(value); setPage(1); }}>
+            <FilterSelect label="Filter" value={table.filters.filter} onChange={(value) => table.setFilter("filter", value)}>
               <option value="">Everyone</option>
               <option value="members">Members only</option>
               <option value="unverified">Unverified email</option>
@@ -114,7 +106,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
                 </div>
               </td>
               <td><Pill tone={member.role === "admin" ? "blue" : member.role === "moderator" ? "yellow" : "gray"}>{ROLE_LABEL[member.role]}</Pill></td>
-              <td className="text-muted-foreground">{member.state ?? "—"}</td>
+              <td className="text-muted-foreground">{member.state ?? "—"}{member.lga && <span className="block text-xs">{member.lga}</span>}</td>
               <td className="whitespace-nowrap text-muted-foreground">{member.listings_count} listed · {member.requests_count} requested</td>
               <td>
                 <div className="flex flex-wrap gap-1">
@@ -134,7 +126,7 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
                   { label: "View profile", icon: <ExternalLink className="size-4" />, onSelect: () => window.open(profilePath(member.slug), "_blank") },
                   {
                     label: "Edit", icon: <Pencil className="size-4" />, hidden: !isAdmin,
-                    onSelect: () => setForm({ id: member.id, first_name: member.first_name ?? member.name.split(" ")[0] ?? "", middle_name: member.middle_name ?? "", last_name: member.last_name ?? "", email: member.email, password: "", role: member.role, location: member.location ?? "", state_id: member.state_id ? String(member.state_id) : "", phone: member.phone ?? "", email_verified: member.email_verified }),
+                    onSelect: () => setForm({ id: member.id, first_name: member.first_name ?? member.name.split(" ")[0] ?? "", middle_name: member.middle_name ?? "", last_name: member.last_name ?? "", email: member.email, password: "", role: member.role, location: member.location ?? "", state_id: member.state_id ? String(member.state_id) : "", lga_id: member.lga_id ? String(member.lga_id) : "", phone: member.phone ?? "", email_verified: member.email_verified }),
                   },
                   member.suspended_at
                     ? { label: "Reinstate", icon: <RotateCcw className="size-4" />, onSelect: () => void setSuspended(member, false), hidden: member.id === me?.id || (member.role === "admin" && !isAdmin) }
@@ -162,8 +154,8 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
             </tr>
           ))}
         </DataTable>
-        {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} total={data.meta.total} onPage={setPage} />}
-      </div>
+        {data && <Pagination meta={data.meta} onPage={table.setPage} onPerPage={table.setPerPage} />}
+      </TableCard>
 
       <AccountDialog form={form} states={states ?? []} isSelf={form?.id === me?.id} onClose={() => setForm(null)} onSaved={() => { setForm(null); refresh(); }} />
       {confirmDialog}
@@ -172,14 +164,22 @@ export function AdminMembersPage({ scope }: { scope: "members" | "staff" }) {
   );
 }
 
-function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormState | null; states: NgState[]; isSelf: boolean; onClose: () => void; onSaved: () => void }) {
+function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormState | null; states: StateOption[]; isSelf: boolean; onClose: () => void; onSaved: () => void }) {
   const [draft, setDraft] = useState<FormState | null>(null);
   const [openedFor, setOpenedFor] = useState<FormState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { data: lgas, isFetching: loadingLgas } = useQuery({
+    queryKey: ["lgas", draft?.state_id],
+    queryFn: () => api.get<{ data: Array<{ id: number; name: string }> }>(`states/${draft?.state_id}/lgas`).then((response) => response.data),
+    enabled: !!draft?.state_id,
+    staleTime: 10 * 60_000,
+  });
 
   if (form !== openedFor) {
     setOpenedFor(form);
     setDraft(form);
+    setErrors({});
   }
 
   if (!draft) return <Dialog open={false} />;
@@ -191,7 +191,7 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
     setBusy(true);
     const payload = {
       first_name: draft.first_name.trim(), middle_name: draft.middle_name.trim() || null, last_name: draft.last_name.trim(), email: draft.email, role: draft.role, location: draft.location || null,
-      state_id: draft.state_id ? Number(draft.state_id) : null, phone: draft.phone || null, email_verified: draft.email_verified,
+      state_id: draft.state_id ? Number(draft.state_id) : null, lga_id: draft.state_id && draft.lga_id ? Number(draft.lga_id) : null, phone: draft.phone || null, email_verified: draft.email_verified,
       ...(draft.password ? { password: draft.password } : {}),
     };
     try {
@@ -200,6 +200,7 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
       toast.success(draft.id ? "Account saved" : "Account created");
       onSaved();
     } catch (err) {
+      setErrors(fieldErrors(err));
       toast.error(errorMessage(err, "Could not save account"));
     } finally {
       setBusy(false);
@@ -215,11 +216,11 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="First name"><Input value={draft.first_name} onChange={set("first_name")} required minLength={2} maxLength={60} /></Field>
-            <Field label="Middle name (optional)"><Input value={draft.middle_name} onChange={set("middle_name")} maxLength={60} /></Field>
-            <Field label="Surname"><Input value={draft.last_name} onChange={set("last_name")} required minLength={2} maxLength={60} /></Field>
-            <Field label="Email"><Input type="email" value={draft.email} onChange={set("email")} required maxLength={255} /></Field>
-            <Field label={draft.id ? "New password (optional)" : "Password"}><Input type="password" value={draft.password} onChange={set("password")} required={!draft.id} minLength={8} autoComplete="new-password" /></Field>
+            <Field label="First name" error={errors.first_name}><Input value={draft.first_name} onChange={set("first_name")} required minLength={2} maxLength={60} /></Field>
+            <Field label="Middle name (optional)" error={errors.middle_name}><Input value={draft.middle_name} onChange={set("middle_name")} maxLength={60} /></Field>
+            <Field label="Surname" error={errors.last_name}><Input value={draft.last_name} onChange={set("last_name")} required minLength={2} maxLength={60} /></Field>
+            <Field label="Email" error={errors.email}><Input type="email" value={draft.email} onChange={set("email")} required maxLength={255} /></Field>
+            <Field label={draft.id ? "New password (optional)" : "Password"} error={errors.password}><Input type="password" value={draft.password} onChange={set("password")} required={!draft.id} minLength={8} autoComplete="new-password" /></Field>
             <Field label="Role" hint={isSelf ? "You can't change your own role." : undefined}>
               <Select value={draft.role} onChange={set("role")} disabled={isSelf}>
                 <option value="member">Member</option>
@@ -227,14 +228,20 @@ function AccountDialog({ form, states, isSelf, onClose, onSaved }: { form: FormS
                 <option value="admin">Administrator</option>
               </Select>
             </Field>
-            <Field label="State">
-              <Select value={draft.state_id} onChange={set("state_id")}>
+            <Field label="State" error={errors.state_id}>
+              <Select value={draft.state_id} onChange={(event) => setDraft((current) => current && { ...current, state_id: event.target.value, lga_id: "" })}>
                 <option value="">Not set</option>
-                {[...states].sort((a, b) => a.name.localeCompare(b.name)).map((state) => <option key={state.id} value={state.id}>{state.name}</option>)}
+                {states.map((state) => <option key={state.id} value={state.id}>{state.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="LGA" error={errors.lga_id}>
+              <Select value={draft.lga_id} onChange={set("lga_id")} disabled={!draft.state_id || loadingLgas}>
+                <option value="">{!draft.state_id ? "Choose a state first" : loadingLgas ? "Loading…" : "Not set"}</option>
+                {(lgas ?? []).map((lga) => <option key={lga.id} value={lga.id}>{lga.name}</option>)}
               </Select>
             </Field>
             <Field label="General area"><Input value={draft.location} onChange={set("location")} maxLength={120} placeholder="e.g. Yaba" /></Field>
-            <Field label="Phone" hint="Nigerian mobile — one account per number."><Input type="tel" value={draft.phone} onChange={set("phone")} maxLength={32} placeholder="0803 123 4567" /></Field>
+            <Field label="Phone" hint="Nigerian mobile — one account per number." error={errors.phone}><Input type="tel" value={draft.phone} onChange={set("phone")} maxLength={32} placeholder="0803 123 4567" /></Field>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={draft.email_verified} onCheckedChange={(checked) => setDraft((current) => current && { ...current, email_verified: checked === true })} />

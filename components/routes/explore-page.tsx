@@ -24,6 +24,8 @@ import { getCategories, getListings, getLocations } from "@/lib/server/api";
 import { getVisitorArea } from "@/lib/server/area";
 import { absoluteUrl, categoryPath, listingPath } from "@/lib/site";
 import type { Category } from "@/lib/types";
+import { RichHtml } from "@/components/rich-html";
+import { JsonLd } from "@/components/seo/json-ld";
 
 const CONDITIONS = Object.entries(CONDITION_LABELS).filter(([value]) =>
   ["brand_new", "like_new", "good", "fair", "needs_repair"].includes(value),
@@ -162,10 +164,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
   return (
     <div className="container-page py-4 sm:py-8">
       {result && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd(title, rows, fixedCategory)) }}
-        />
+        <JsonLd data={listJsonLd(title, rows)} />
       )}
 
       <header className="relative isolate overflow-hidden rounded-3xl border border-border bg-card px-4 pb-4 pt-4 sm:px-8 sm:pb-7 sm:pt-6">
@@ -197,7 +196,11 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
 
         <div className="mt-4 min-w-0 sm:mt-5 md:max-w-[56%]">
           <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight sm:text-4xl">{highlightFree(title)}</h1>
-          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground sm:text-base">{description}</p>
+          {fixedCategory?.description ? (
+            <RichHtml html={fixedCategory.description} className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground sm:text-base [&_h2]:text-foreground [&_h3]:text-foreground" />
+          ) : (
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground sm:text-base">{description}</p>
+          )}
         </div>
 
         <ul className="mt-4 flex flex-wrap gap-2 text-xs font-semibold sm:mt-5" aria-label="Good to know">
@@ -374,7 +377,8 @@ function FilterLink({ href, active, children }: { href: string; active: boolean;
   );
 }
 
-function listJsonLd(title: string, rows: ListingRow[], category?: Category) {
+/** The items on this page of results. Breadcrumbs and the page type come from the route's PageJsonLd. */
+function listJsonLd(title: string, rows: ListingRow[]) {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -389,16 +393,6 @@ function listJsonLd(title: string, rows: ListingRow[], category?: Category) {
           url: absoluteUrl(listingPath(item.slug)),
         })),
       },
-      ...(category
-        ? [{
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
-              { "@type": "ListItem", position: 2, name: "Categories", item: absoluteUrl("/categories") },
-              { "@type": "ListItem", position: 3, name: category.name, item: absoluteUrl(categoryPath(category.slug)) },
-            ],
-          }]
-        : []),
     ],
   };
 }

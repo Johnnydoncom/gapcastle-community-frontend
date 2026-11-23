@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { CONDITION_LABELS, LISTING_STATUS_LABELS, toListingRow } from "@/lib/gapcastle";
 import { ServerApiError, getListing, getRelatedListings, getStates } from "@/lib/server/api";
+import { JsonLd } from "@/components/seo/json-ld";
 import { absoluteUrl, categoryPath, listingPath, profilePath } from "@/lib/site";
 import type { Listing, NgState } from "@/lib/types";
 
@@ -73,7 +74,7 @@ export async function ItemPage({ slug }: { slug: string }) {
 
   return (
     <div className="container-page pb-6 pt-0 sm:pt-5">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemJsonLd(listing, canonical)) }} />
+      <JsonLd data={itemJsonLd(listing, canonical)} />
 
       <nav aria-label="Breadcrumb" className="mb-4 hidden flex-wrap items-center gap-1 text-sm text-muted-foreground sm:flex">
         <Link href="/" className="hover:text-primary">Home</Link>

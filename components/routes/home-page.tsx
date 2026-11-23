@@ -265,7 +265,7 @@ async function AnnouncementBar() {
     <section className="container-page mt-3" aria-label="Community announcement">
       <div className="flex items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-900">
         <Megaphone className="mt-0.5 size-4 shrink-0 text-primary" />
-        <p><strong>{announcement.title}</strong> <span className="opacity-90">— {announcement.body}</span></p>
+        <p><strong>{announcement.title}</strong> <span className="opacity-90">— {announcement.body_text ?? announcement.body}</span></p>
       </div>
     </section>
   );
@@ -453,7 +453,7 @@ async function CommunityBand() {
               Your unused items could change someone&apos;s day. Join neighbours across Nigeria who give freely, receive gratefully and look out for one another.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="highlight"><Link href="/auth?mode=join">Join the community</Link></Button>
+              <Button asChild size="lg" variant="highlight"><Link href="/register">Join the community</Link></Button>
               <InstallAppButton size="lg" variant="outline" className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white" />
             </div>
           </div>

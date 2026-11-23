@@ -6,7 +6,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { parseExploreFilters, type RawSearchParams } from "@/lib/explore";
 import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { ServerApiError, getCategory } from "@/lib/server/api";
-import { absoluteUrl, categoryPath } from "@/lib/site";
+import { categoryPath } from "@/lib/site";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
   try {
     const { data: category } = await getCategory(slug);
     const canonical = categoryPath(category.slug || String(category.id));
-    const description = category.description
+    const plain = category.description_text?.replace(/\s+/g, " ").trim();
+    const description = (plain ? (plain.length > 160 ? `${plain.slice(0, 157).trimEnd()}…` : plain) : null)
       ?? `Browse free ${category.name.toLowerCase()} shared by neighbours on Gratis Castle. Everything is free — take what you need, give what you don't. Available across Nigeria.`;
 
     return {

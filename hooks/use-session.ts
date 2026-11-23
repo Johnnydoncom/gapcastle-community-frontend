@@ -48,7 +48,7 @@ export function useSignOut() {
     await authRequest("logout").catch(() => undefined);
     queryClient.clear();
     queryClient.setQueryData(SESSION_KEY, null);
-    router.replace("/auth");
+    router.replace("/login");
     router.refresh();
   }, [queryClient, router]);
 }

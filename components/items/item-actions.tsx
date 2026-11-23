@@ -45,7 +45,7 @@ export function ItemActions({ listingId, listingSlug, title, status, isRequestab
   async function toggleSave() {
     if (!userId) {
       toast.info("Sign in to save items");
-      router.push(`/auth?next=${encodeURIComponent(itemPath)}`);
+      router.push(`/login?next=${encodeURIComponent(itemPath)}`);
       return;
     }
 
@@ -80,7 +80,7 @@ export function ItemActions({ listingId, listingSlug, title, status, isRequestab
 
   const primary = canCheckout ? (
     <Button asChild size="lg" className="h-12 flex-1 rounded-xl text-base">
-      <Link href={userId ? checkoutPath : `/auth?next=${encodeURIComponent(checkoutPath)}`}>
+      <Link href={userId ? checkoutPath : `/login?next=${encodeURIComponent(checkoutPath)}`}>
         Get it free <ArrowRight className="size-4" />
       </Link>
     </Button>

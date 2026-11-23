@@ -5,16 +5,34 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, Check, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader, Panel, errorMessage } from "@/components/admin/ui";
-import { Input } from "@/components/ui/form-fields";
+import { Field, PageHeader, Panel, errorMessage, fieldErrors } from "@/components/admin/ui";
+import { Input, Textarea } from "@/components/ui/form-fields";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/gapcastle";
+import type { SiteInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Mode = "manual" | "automatic";
-type Settings = { listing_approval: Mode; monthly_claim_limit: number; pending_listings: number; updated_at: string | null; updated_by: string | null };
+type Settings = { listing_approval: Mode; monthly_claim_limit: number; pending_listings: number; updated_at: string | null; updated_by: string | null; site: SiteInfo };
+
+const CONTACT_FIELDS: Array<{ key: keyof SiteInfo; label: string; type?: string; placeholder?: string; hint?: string }> = [
+  { key: "contact_email", label: "Contact email", type: "email", placeholder: "info@gapcastle.com", hint: "Shown on the site, and where contact-form messages are emailed." },
+  { key: "contact_phone", label: "Phone number", type: "tel", placeholder: "+234 …" },
+  { key: "whatsapp_number", label: "WhatsApp number", type: "tel", placeholder: "+234 803 123 4567", hint: "Leave blank to hide the WhatsApp link." },
+  { key: "support_hours", label: "Support hours", placeholder: "Mon–Sat, 9am–5pm" },
+  { key: "office_address", label: "Office address", placeholder: "Optional" },
+];
+
+const SOCIAL_FIELDS: Array<{ key: keyof SiteInfo; label: string }> = [
+  { key: "social_facebook", label: "Facebook" },
+  { key: "social_instagram", label: "Instagram" },
+  { key: "social_x", label: "X (Twitter)" },
+  { key: "social_linkedin", label: "LinkedIn" },
+  { key: "social_tiktok", label: "TikTok" },
+  { key: "social_youtube", label: "YouTube" },
+];
 
 const OPTIONS: Array<{ value: Mode; title: string; text: string; icon: typeof ShieldCheck; recommended?: boolean }> = [
   {
@@ -39,6 +57,8 @@ export function AdminSettingsPage() {
   const queryClient = useQueryClient();
   const [choice, setChoice] = useState<Mode | null>(null);
   const [limit, setLimit] = useState<string | null>(null);
+  const [site, setSite] = useState<Partial<SiteInfo>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-settings"],
@@ -50,17 +70,26 @@ export function AdminSettingsPage() {
   const currentLimit = String(data?.monthly_claim_limit ?? 3);
   const selectedLimit = limit ?? currentLimit;
   const limitValid = /^\d+$/.test(selectedLimit) && Number(selectedLimit) >= 1 && Number(selectedLimit) <= 50;
-  const dirty = selected !== current || selectedLimit !== currentLimit;
+  const siteValue = (key: keyof SiteInfo) => site[key] ?? data?.site?.[key] ?? "";
+  const siteDirty = Object.entries(site).some(([key, value]) => value !== (data?.site?.[key as keyof SiteInfo] ?? ""));
+  const dirty = selected !== current || selectedLimit !== currentLimit || siteDirty;
 
   async function save() {
     setSaving(true);
     try {
-      const response = await api.put<{ data: Settings; message: string }>("admin/settings", { listing_approval: selected, monthly_claim_limit: Number(selectedLimit) });
+      const response = await api.put<{ data: Settings; message: string }>("admin/settings", {
+        listing_approval: selected,
+        monthly_claim_limit: Number(selectedLimit),
+        ...(siteDirty ? { site } : {}),
+      });
       queryClient.setQueryData(["admin-settings"], response.data);
       setChoice(null);
       setLimit(null);
+      setSite({});
+      setErrors({});
       toast.success(response.message);
     } catch (err) {
+      setErrors(fieldErrors(err));
       toast.error(errorMessage(err, "Could not save settings"));
     } finally {
       setSaving(false);
@@ -68,7 +97,7 @@ export function AdminSettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-4xl pb-20">
       <PageHeader title="Settings" description="Control how the marketplace behaves. Changes apply immediately to everyone." />
 
       <Panel
@@ -137,10 +166,33 @@ export function AdminSettingsPage() {
         {!limitValid && <p className="mt-2 text-xs font-medium text-destructive">Choose a whole number from 1 to 50.</p>}
       </Panel>
 
-      <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+      <Panel className="mt-5" title="Contact details" description="Shown in the site footer and on the Contact page.">
+        <fieldset disabled={!isAdmin || isLoading} className="grid gap-4 sm:grid-cols-2">
+          {CONTACT_FIELDS.map((field) => (
+            <Field key={field.key} label={field.label} hint={field.hint} error={errors[`site.${field.key}`]} className={field.key === "office_address" ? "sm:col-span-2" : undefined}>
+              <Input type={field.type ?? "text"} value={siteValue(field.key)} onChange={(event) => setSite((draft) => ({ ...draft, [field.key]: event.target.value }))} placeholder={field.placeholder} maxLength={255} />
+            </Field>
+          ))}
+          <Field label="Footer description" hint="The short paragraph under the logo in the footer." error={errors["site.footer_about"]} className="sm:col-span-2">
+            <Textarea value={siteValue("footer_about")} onChange={(event) => setSite((draft) => ({ ...draft, footer_about: event.target.value }))} rows={2} maxLength={400} />
+          </Field>
+        </fieldset>
+      </Panel>
+
+      <Panel className="mt-5" title="Social profiles" description="Full https:// links. Leave a field blank to hide that network from the footer.">
+        <fieldset disabled={!isAdmin || isLoading} className="grid gap-4 sm:grid-cols-2">
+          {SOCIAL_FIELDS.map((field) => (
+            <Field key={field.key} label={field.label} error={errors[`site.${field.key}`]}>
+              <Input type="url" value={siteValue(field.key)} onChange={(event) => setSite((draft) => ({ ...draft, [field.key]: event.target.value }))} placeholder="https://" maxLength={255} />
+            </Field>
+          ))}
+        </fieldset>
+      </Panel>
+
+      <div className="sticky bottom-0 z-10 -mx-4 mt-5 flex flex-wrap items-center justify-end gap-3 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         {isAdmin ? (
           <div className="flex gap-2">
-            {dirty && <Button variant="ghost" onClick={() => { setChoice(null); setLimit(null); }} disabled={saving}>Cancel</Button>}
+            {dirty && <Button variant="ghost" onClick={() => { setChoice(null); setLimit(null); setSite({}); setErrors({}); }} disabled={saving}>Cancel</Button>}
             <Button onClick={() => void save()} disabled={!dirty || saving || !limitValid}>{saving ? "Saving…" : "Save changes"}</Button>
           </div>
         ) : (

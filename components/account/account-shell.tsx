@@ -26,7 +26,7 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
         <HandHeart className="mx-auto size-10 text-primary" />
         <h1 className="mt-4 text-3xl font-bold">Your community space</h1>
         <p className="mt-2 text-muted-foreground">Sign in to manage the things you give and find.</p>
-        <Button asChild className="mt-6"><Link href={`/auth?next=${encodeURIComponent(pathname)}`}>Sign in</Link></Button>
+        <Button asChild className="mt-6"><Link href={`/login?next=${encodeURIComponent(pathname)}`}>Sign in</Link></Button>
       </div>
     );
   }

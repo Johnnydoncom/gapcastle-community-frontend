@@ -14,6 +14,7 @@ import type {
   Paginated,
   PublicProfile,
   Review,
+  SiteInfo,
 } from "@/lib/types";
 
 type QueryValue = string | number | boolean | string[] | null | undefined;
@@ -142,6 +143,11 @@ export function getStats(): Promise<{ data: CommunityStats }> {
 
 export function getAnnouncements(): Promise<{ data: Announcement[] }> {
   return serverGet<{ data: Announcement[] }>("announcements", undefined, { revalidate: 60 });
+}
+
+/** Contact details, social links and footer text managed in Admin › Settings (public, cached briefly). */
+export function getSiteInfo(): Promise<{ data: SiteInfo }> {
+  return serverGet<{ data: SiteInfo }>("site-info", undefined, { authenticated: false, revalidate: 60 });
 }
 
 /** Recent community reviews for the homepage (public, cached briefly). */

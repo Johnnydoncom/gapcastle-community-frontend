@@ -11,7 +11,9 @@ import {
   FolderTree,
   Globe,
   HandHeart,
+  Inbox,
   LayoutDashboard,
+  Map,
   LogOut,
   MapPin,
   Megaphone,
@@ -19,6 +21,7 @@ import {
   Package,
   Search,
   Settings,
+  Star,
   TriangleAlert,
   UserCog,
   Users,
@@ -40,9 +43,9 @@ import { cn } from "@/lib/utils";
 import logoMarkWhite from "@/public/brand/logo-mark-white.png";
 import { BrandWordmark } from "@/components/brand-wordmark";
 
-type Counts = { pending_moderation: number; open_reports: number };
+type Counts = { pending_moderation: number; open_reports: number; new_contact_messages: number; open_orders: number };
 
-const NAV: Array<{ group: string; links: Array<{ href: string; label: string; icon: typeof Activity; badge?: keyof Counts }> }> = [
+const NAV: Array<{ group: string; links: Array<{ href: string; label: string; icon: typeof Activity; badge?: keyof Counts; also?: string[] }> }> = [
   { group: "Overview", links: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }] },
   {
     group: "Catalogue",
@@ -54,8 +57,9 @@ const NAV: Array<{ group: string; links: Array<{ href: string; label: string; ic
   {
     group: "Logistics",
     links: [
-      { href: "/admin/requests", label: "Orders", icon: HandHeart },
-      { href: "/admin/locations", label: "Pickup locations", icon: MapPin },
+      { href: "/admin/requests", label: "Orders", icon: HandHeart, badge: "open_orders" },
+      { href: "/admin/locations", label: "Pickup hubs", icon: MapPin },
+      { href: "/admin/states", label: "States & LGAs", icon: Map, also: ["/admin/lgas"] },
     ],
   },
   {
@@ -63,20 +67,22 @@ const NAV: Array<{ group: string; links: Array<{ href: string; label: string; ic
     links: [
       { href: "/admin/users", label: "Members", icon: Users },
       { href: "/admin/admins", label: "Admins & moderators", icon: UserCog },
+      { href: "/admin/inbox", label: "Contact inbox", icon: Inbox, badge: "new_contact_messages" },
     ],
   },
   {
     group: "Trust & content",
     links: [
       { href: "/admin/reports", label: "Reports", icon: TriangleAlert, badge: "open_reports" },
+      { href: "/admin/reviews", label: "Reviews", icon: Star },
       { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
+      { href: "/admin/seo", label: "Pages & SEO", icon: Globe },
     ],
   },
   {
     group: "System",
     links: [
-      { href: "/admin/seo", label: "SEO", icon: Globe },
-      { href: "/admin/settings", label: "Settings", icon: Settings },
+      { href: "/admin/settings", label: "Site settings", icon: Settings },
       { href: "/admin/activity", label: "Activity log", icon: Activity },
     ],
   },
@@ -147,9 +153,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
 function SidebarNav({ pathname, counts, onNavigate }: { pathname: string; counts?: Counts; onNavigate: () => void }) {
   return (
     <>
-      <Link href="/admin" onClick={onNavigate} aria-label="Gratis Castle admin console" className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
-        <Image src={logoMarkWhite} alt="" className="h-8 w-auto shrink-0" sizes="48px" />
-        <BrandWordmark inverted tagline="admin console" />
+      <Link href="/admin" onClick={onNavigate} aria-label="Gratis Castle admin console" className="flex h-14 sm:h-16 shrink-0 text-left items-center gap-2.5 border-b border-white/10 px-5">
+        <Image src={logoMarkWhite} alt="" className="h-6 w-auto shrink-0" sizes="48px" />
+        <BrandWordmark inverted tagline="admin console" className="text-[16px] sm:text-[20px]" />
       </Link>
       <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-4">
         {NAV.map((section) => (
@@ -157,7 +163,7 @@ function SidebarNav({ pathname, counts, onNavigate }: { pathname: string; counts
             <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-foreground/45">{section.group}</p>
             <ul className="space-y-0.5">
               {section.links.map((link) => {
-                const active = link.href === "/admin" ? pathname === "/admin" : pathname.startsWith(link.href);
+                const active = link.href === "/admin" ? pathname === "/admin" : [link.href, ...(link.also ?? [])].some((href) => pathname === href || pathname.startsWith(`${href}/`));
                 const badge = link.badge ? counts?.[link.badge] ?? 0 : 0;
                 return (
                   <li key={link.href}>
@@ -193,21 +199,30 @@ function SidebarNav({ pathname, counts, onNavigate }: { pathname: string; counts
 function AdminSearch() {
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [scope, setScope] = useState("listings");
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (q.trim()) router.push(`/admin/listings?q=${encodeURIComponent(q.trim())}`);
+    const target = scope === "members" ? "/admin/users" : scope === "orders" ? "/admin/requests" : "/admin/listings";
+    if (q.trim()) router.push(`${target}?q=${encodeURIComponent(q.trim())}`);
   }
   return (
-    <form onSubmit={submit} role="search" className="relative hidden w-full max-w-md md:block">
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <input
-        type="search"
-        value={q}
-        onChange={(event) => setQ(event.target.value)}
-        placeholder="Search listings…"
-        aria-label="Search listings"
-        className="h-10 w-full rounded-xl border border-input bg-muted/50 pl-9 pr-3 text-sm outline-none transition focus:border-primary/50 focus:bg-card focus:ring-2 focus:ring-ring/30"
-      />
+    <form onSubmit={submit} role="search" className="hidden w-full max-w-lg items-center rounded-xl border border-input bg-muted/50 transition focus-within:border-primary/50 focus-within:bg-card focus-within:ring-2 focus-within:ring-ring/30 md:flex">
+      <select value={scope} onChange={(event) => setScope(event.target.value)} aria-label="Search in" className="select-caret h-10 shrink-0 rounded-l-xl border-r border-input bg-transparent pl-3 text-sm font-medium outline-none">
+        <option value="listings">Listings</option>
+        <option value="members">Members</option>
+        <option value="orders">Orders</option>
+      </select>
+      <span className="relative flex flex-1 items-center">
+        <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+        <input
+          type="search"
+          value={q}
+          onChange={(event) => setQ(event.target.value)}
+          placeholder={scope === "members" ? "Name or email…" : scope === "orders" ? "Order number, item or member…" : "Title, area or giver…"}
+          aria-label={`Search ${scope}`}
+          className="h-10 w-full bg-transparent pl-9 pr-3 text-sm outline-none"
+        />
+      </span>
     </form>
   );
 }

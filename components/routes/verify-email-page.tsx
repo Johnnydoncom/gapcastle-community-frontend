@@ -18,7 +18,7 @@ export function VerifyEmailPage() {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!user) router.replace(`/auth?next=${encodeURIComponent(`/verify-email?next=${encodeURIComponent(next)}`)}`);
+    if (!user) router.replace(`/login?next=${encodeURIComponent(`/verify-email?next=${encodeURIComponent(next)}`)}`);
     else if (user.email_verified) router.replace(next);
   }, [isLoading, user, next, router]);
 

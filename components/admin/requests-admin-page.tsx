@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDeferredValue, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Bike, ExternalLink, Loader2, MapPin, PackageCheck, Settings2, Store, Truck, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { DataTable, Field, FilterSelect, PageHeader, Pagination, Pill, RowActions, STATUS_TONE, SearchInput, Toolbar, errorMessage } from "@/components/admin/ui";
+import { useAllStates } from "@/components/admin/geography-admin";
+import { DataTable, Field, FilterSelect, PageHeader, Pagination, Pill, RowActions, STATUS_TONE, SearchInput, TableCard, Toolbar, errorMessage, useTableState, type PageMeta } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, Textarea } from "@/components/ui/form-fields";
 import { api } from "@/lib/api";
 import { REQUEST_STATUS_LABELS, timeAgo } from "@/lib/gapcastle";
 import { listingPath, profilePath } from "@/lib/site";
-import type { FulfillmentStage, NgState } from "@/lib/types";
+import type { FulfillmentStage } from "@/lib/types";
 
 type AdminOrder = {
   id: number;
@@ -35,7 +35,7 @@ type AdminOrder = {
   claimed_at: string | null;
   stage_updated_at: string | null;
 };
-type Page = { data: AdminOrder[]; meta: { current_page: number; last_page: number; total: number }; stages: { value: FulfillmentStage; label: string }[] };
+type Page = { data: AdminOrder[]; meta: PageMeta; stages: { value: FulfillmentStage; label: string }[] };
 
 const STAGE_TONE: Record<string, "yellow" | "blue" | "green" | "gray"> = {
   awaiting_handover: "yellow",
@@ -52,56 +52,47 @@ const STAGE_TONE: Record<string, "yellow" | "blue" | "green" | "gray"> = {
  * order through its stages; the receiver is notified at every step.
  */
 export function AdminRequestsPage() {
-  const params = useSearchParams();
   const queryClient = useQueryClient();
-  const [q, setQ] = useState("");
-  const [status, setStatus] = useState(params.get("status") ?? "accepted");
-  const [stage, setStage] = useState("");
-  const [method, setMethod] = useState("");
-  const [state, setState] = useState("");
-  const [page, setPage] = useState(1);
+  const table = useTableState({ status: "accepted", stage: "", method: "", state: "" });
   const [managing, setManaging] = useState<AdminOrder | null>(null);
-  const search = useDeferredValue(q);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-requests", search, status, stage, method, state, page],
-    queryFn: () => api.get<Page>("admin/requests", { q: search || undefined, status: status || undefined, stage: stage || undefined, method: method || undefined, state: state || undefined, page }),
+    queryKey: ["admin-requests", table.query],
+    queryFn: () => api.get<Page>("admin/requests", { ...table.query, status: table.filters.status === "all" ? undefined : table.filters.status }),
     placeholderData: (previous) => previous,
   });
-  const { data: states } = useQuery({
-    queryKey: ["states"],
-    queryFn: () => api.get<{ data: NgState[] }>("states").then((response) => response.data),
-    staleTime: 5 * 60_000,
-  });
-  const reset = (setter: (value: string) => void) => (value: string) => { setter(value); setPage(1); };
-  const refresh = () => void queryClient.invalidateQueries({ queryKey: ["admin-requests"] });
+  const { data: states } = useAllStates();
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin-requests"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin-counts"] });
+  };
 
   return (
     <div>
       <PageHeader title="Orders" description="Every free order across Nigeria. Run the handover from the giver to the receiver — contact details here are never shown to the other member." />
 
-      <div className="rounded-2xl border border-border bg-card shadow-soft">
+      <TableCard>
         <Toolbar>
-          <SearchInput value={q} onChange={reset(setQ)} placeholder="Order no., item, receiver or email" />
-          <FilterSelect label="Status" value={status} onChange={reset(setStatus)}>
-            <option value="">All statuses</option>
+          <SearchInput value={table.q} onChange={table.setQ} placeholder="Order no., item, receiver or email" />
+          <FilterSelect label="Status" value={table.filters.status} onChange={(value) => table.setFilter("status", value)}>
+            <option value="all">All statuses</option>
             <option value="accepted">In progress</option>
             <option value="completed">Received</option>
             <option value="cancelled">Cancelled</option>
             <option value="declined">Closed</option>
           </FilterSelect>
-          <FilterSelect label="Stage" value={stage} onChange={reset(setStage)}>
+          <FilterSelect label="Stage" value={table.filters.stage} onChange={(value) => table.setFilter("stage", value)}>
             <option value="">All stages</option>
             {(data?.stages ?? []).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </FilterSelect>
-          <FilterSelect label="Collection" value={method} onChange={reset(setMethod)}>
+          <FilterSelect label="Collection" value={table.filters.method} onChange={(value) => table.setFilter("method", value)}>
             <option value="">Pickup & delivery</option>
             <option value="pickup">Hub pickup</option>
             <option value="delivery">Delivery</option>
           </FilterSelect>
-          <FilterSelect label="State" value={state} onChange={reset(setState)}>
+          <FilterSelect label="State" value={table.filters.state} onChange={(value) => table.setFilter("state", value)}>
             <option value="">All states</option>
-            {[...(states ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            {(states ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </FilterSelect>
         </Toolbar>
 
@@ -152,8 +143,8 @@ export function AdminRequestsPage() {
             </tr>
           ))}
         </DataTable>
-        {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} total={data.meta.total} onPage={setPage} />}
-      </div>
+        {data && <Pagination meta={data.meta} onPage={table.setPage} onPerPage={table.setPerPage} />}
+      </TableCard>
 
       <p className="mt-4 text-xs text-muted-foreground">Need to change a hub? Manage hubs in <Link href="/admin/locations" className="font-semibold text-primary">Pickup locations</Link>.</p>
 

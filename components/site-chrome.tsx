@@ -80,7 +80,7 @@ export const ACCOUNT_LINKS = [
 ];
 
 /** Bottom-tab destinations: these show the menu button instead of a back button on phones. */
-const TAB_ROOTS = ["/", "/explore", "/categories", "/give", "/account", "/account/messages", "/account/saved", "/auth"];
+const TAB_ROOTS = ["/", "/explore", "/categories", "/give", "/account", "/account/messages", "/account/saved", "/login", "/register"];
 
 /** Screens where phones get their own sticky action bar instead of the bottom tabs. */
 function hasOwnActionBar(pathname: string) {
@@ -132,7 +132,7 @@ function HeaderIconLink({ href, label, count = 0, children, className }: { href:
   );
 }
 
-export function SiteChrome({ children, categoryNav, hubNote }: { children: ReactNode; categoryNav?: ReactNode; hubNote?: ReactNode }) {
+export function SiteChrome({ children, categoryNav, hubNote, footerAbout, footerLinks }: { children: ReactNode; categoryNav?: ReactNode; hubNote?: ReactNode; footerAbout?: ReactNode; footerLinks?: ReactNode }) {
   const { user, session } = useSession();
   const signOut = useSignOut();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -196,7 +196,7 @@ export function SiteChrome({ children, categoryNav, hubNote }: { children: React
                 </DropdownMenu>
               </>
             ) : (
-              <Link href="/auth" className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-muted">
+              <Link href="/login" className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-muted">
                 <UserRound className="size-5" />
                 <span className="text-left text-sm font-semibold leading-tight sm:hidden">Sign in</span>
                 <span className="hidden text-left leading-tight sm:block">
@@ -234,8 +234,8 @@ export function SiteChrome({ children, categoryNav, hubNote }: { children: React
               </div>
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-2">
-                <Button asChild variant="highlight" onClick={() => setMenuOpen(false)}><Link href="/auth?mode=join">Join free</Link></Button>
-                <Button asChild variant="outline" className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => setMenuOpen(false)}><Link href="/auth">Sign in</Link></Button>
+                <Button asChild variant="highlight" onClick={() => setMenuOpen(false)}><Link href="/register">Join free</Link></Button>
+                <Button asChild variant="outline" className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => setMenuOpen(false)}><Link href="/login">Sign in</Link></Button>
               </div>
             )}
           </div>
@@ -258,7 +258,7 @@ export function SiteChrome({ children, categoryNav, hubNote }: { children: React
       <main id="main" className="flex-1">{children}</main>
 
       <Suspense fallback={<SiteFooter />}>
-        <FooterOutsideAdmin hubNote={hubNote} />
+        <FooterOutsideAdmin hubNote={hubNote} footerAbout={footerAbout} footerLinks={footerLinks} />
       </Suspense>
 
       <Suspense fallback={null}>
@@ -366,12 +366,12 @@ function ActiveMobileMenuLinks(props: { isMember: boolean; isModerator: boolean;
   return <MobileMenuLinks pathname={usePathname()} {...props} />;
 }
 
-function FooterOutsideAdmin({ hubNote }: { hubNote?: ReactNode }) {
+function FooterOutsideAdmin({ hubNote, footerAbout, footerLinks }: { hubNote?: ReactNode; footerAbout?: ReactNode; footerLinks?: ReactNode }) {
   const pathname = usePathname();
-  return pathname.startsWith("/admin") ? null : <SiteFooter compactOnMobile={hasOwnActionBar(pathname)} hubNote={hubNote} />;
+  return pathname.startsWith("/admin") ? null : <SiteFooter compactOnMobile={hasOwnActionBar(pathname)} hubNote={hubNote} footerAbout={footerAbout} footerLinks={footerLinks} />;
 }
 
-function SiteFooter({ compactOnMobile = false, hubNote }: { compactOnMobile?: boolean; hubNote?: ReactNode }) {
+function SiteFooter({ compactOnMobile = false, hubNote, footerAbout, footerLinks }: { compactOnMobile?: boolean; hubNote?: ReactNode; footerAbout?: ReactNode; footerLinks?: ReactNode }) {
   return (
     <footer className={cn("mt-16 bg-ink text-ink-foreground", compactOnMobile ? "hidden md:block" : "pb-20 md:pb-0")}>
       <div className="border-b border-white/10">
@@ -392,12 +392,14 @@ function SiteFooter({ compactOnMobile = false, hubNote }: { compactOnMobile?: bo
         <div className="col-span-2 lg:col-span-1">
           <Logo inverted />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-foreground/75">
-            A free community marketplace where good things find a second home. Give or pick an item for free.
+            {footerAbout ?? "A free community marketplace where good things find a second home. Give or pick an item for free."}
           </p>
           <div className="mt-5 inline-flex">
             <InstallAppButton variant="highlight" />
           </div>
-          <SocialLinks />
+          <div className="mt-5 inline-flex flex-wrap gap-2 text-sm">
+            {footerLinks ?? <a href="mailto:info@gapcastle.com" className="rounded-full border border-white/15 px-3 py-1.5 text-ink-foreground/80 transition-colors hover:border-white/40 hover:text-white">info@gapcastle.com</a>}
+          </div>
         </div>
         <FooterColumn title="Community" links={[
           { href: "/explore", label: "Browse free items" },
@@ -437,7 +439,7 @@ function BottomNav({ pathname, session }: { pathname: string; session: Session |
     user
       ? { href: "/account/messages", label: "Chats", icon: MessageCircle, match: isActive(pathname, "/account/messages"), badge: session?.unreadConversations ?? 0 }
       : { href: "/account/saved", label: "Saved", icon: Heart, match: isActive(pathname, "/account/saved") },
-    { href: user ? "/account" : "/auth", label: user ? "Account" : "Sign in", icon: UserRound, match: pathname === "/account" || pathname === "/auth" || (isActive(pathname, "/account") && !isActive(pathname, "/account/messages")) },
+    { href: user ? "/account" : "/login", label: user ? "Account" : "Sign in", icon: UserRound, match: pathname === "/account" || pathname === "/login" || pathname === "/register" || pathname === "/forgot-password" || (isActive(pathname, "/account") && !isActive(pathname, "/account/messages")) },
   ];
 
   return (
@@ -481,25 +483,5 @@ function FooterColumn({ title, links }: { title: string; links: { href: string; 
         ))}
       </ul>
     </nav>
-  );
-}
-
-/** Social profiles are configured per deployment (NEXT_PUBLIC_SOCIAL_*) so we never link to accounts that don't exist. */
-function SocialLinks() {
-  const links = [
-    { label: "Facebook", href: process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK },
-    { label: "Instagram", href: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM },
-    { label: "X", href: process.env.NEXT_PUBLIC_SOCIAL_X },
-    { label: "LinkedIn", href: process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN },
-  ].filter((link): link is { label: string; href: string } => Boolean(link.href));
-
-  const pill = "rounded-full border border-white/15 px-3 py-1.5 text-ink-foreground/80 transition-colors hover:border-white/40 hover:text-white";
-  return (
-    <div className="mt-5 inline-flex flex-wrap gap-2 text-sm">
-      <a href="mailto:info@gapcastle.com" className={pill}>info@gapcastle.com</a>
-      {links.map((link) => (
-        <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className={pill}>{link.label}</a>
-      ))}
-    </div>
   );
 }

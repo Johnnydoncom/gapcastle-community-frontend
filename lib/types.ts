@@ -4,7 +4,10 @@ export type Category = {
   id: number;
   name: string;
   slug: string;
+  /** Sanitised rich text (HTML). */
   description: string | null;
+  /** Plain-text version of the description, for meta tags and previews. */
+  description_text?: string | null;
   icon: string;
   image_url: string | null;
   available_count?: number;
@@ -216,4 +219,20 @@ export type CommunityStats = {
 
 export type LocationOption = { label: string; value: string; count: number };
 
-export type Announcement = { id: number; title: string; body: string; published_at: string | null };
+export type Announcement = { id: number; title: string; body: string; body_text?: string; published_at: string | null };
+
+/** Public site information managed in Admin › Settings. */
+export type SiteInfo = {
+  contact_email: string;
+  contact_phone: string;
+  whatsapp_number: string;
+  office_address: string;
+  support_hours: string;
+  footer_about: string;
+  social_facebook: string;
+  social_instagram: string;
+  social_x: string;
+  social_linkedin: string;
+  social_tiktok: string;
+  social_youtube: string;
+};

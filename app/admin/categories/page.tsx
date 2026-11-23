@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { AdminCategoriesPage } from "@/components/admin/management-pages";
+import { Suspense } from "react";
+import { AdminCategoriesPage } from "@/components/admin/categories-admin";
 
-export const metadata: Metadata = {
-  title: "Categories",
-  description: "Manage marketplace categories.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: "Categories", robots: { index: false, follow: false } };
 
 export default function Page() {
-  return <AdminCategoriesPage />;
+  return (
+    <Suspense fallback={null}>
+      <AdminCategoriesPage />
+    </Suspense>
+  );
 }

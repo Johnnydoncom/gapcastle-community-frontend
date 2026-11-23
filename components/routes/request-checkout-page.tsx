@@ -17,7 +17,7 @@ export async function RequestCheckoutPage({ slug }: { slug: string }) {
   const viewer = await getViewer();
 
   if (!viewer) {
-    redirect(`/auth?next=${encodeURIComponent(checkoutPath)}`);
+    redirect(`/login?next=${encodeURIComponent(checkoutPath)}`);
   }
 
   let listing: Listing;

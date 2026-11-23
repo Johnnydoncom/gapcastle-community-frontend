@@ -2,18 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDeferredValue, useState } from "react";
-import { Check, ExternalLink, Eye, Package, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Check, Eye, Package, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { DataTable, FilterSelect, PageHeader, Pagination, Pill, STATUS_TONE, SearchInput, Toolbar, errorMessage, humanize, useConfirm } from "@/components/admin/ui";
+import { useAllStates } from "@/components/admin/geography-admin";
+import { DataTable, FilterSelect, PageHeader, Pagination, Pill, STATUS_TONE, SearchInput, TableCard, Toolbar, errorMessage, humanize, useConfirm, useTableState, type PageMeta } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/gapcastle";
-import { listingPath } from "@/lib/site";
-import type { Category } from "@/lib/types";
+import { listingPath, profilePath } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 type AdminListing = {
@@ -22,40 +20,34 @@ type AdminListing = {
   category: { id: number; name: string } | null; giver: { id: number; name: string; slug: string } | null;
   image: string | null; requests_count: number; created_at: string; deleted_at: string | null;
 };
-type Page = { data: AdminListing[]; meta: { current_page: number; last_page: number; total: number } };
+type Page = { data: AdminListing[]; meta: PageMeta };
 
 const STATUSES = ["available", "reserved", "given_away", "paused", "removed"];
 
 /** Listings ("products"): browse, moderate, edit, delete and restore. Prices can never be set. */
 export function AdminListingsPage() {
-  const params = useSearchParams();
   const { user } = useSession();
   const isAdmin = !!user?.is_admin;
   const queryClient = useQueryClient();
   const { confirm, element: confirmDialog } = useConfirm();
-  const [q, setQ] = useState(params.get("q") ?? "");
-  const [status, setStatus] = useState(params.get("status") ?? "");
-  const [moderation, setModeration] = useState(params.get("moderation") ?? "");
-  const [category, setCategory] = useState("");
-  const [page, setPage] = useState(1);
-  const search = useDeferredValue(q);
+  const table = useTableState({ status: "", moderation: "", category: "", state: "" });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-listings", search, status, moderation, category, page],
-    queryFn: () => api.get<Page>("admin/listings", { q: search || undefined, status: status || undefined, moderation: moderation || undefined, category: category || undefined, page }),
+    queryKey: ["admin-listings", table.query],
+    queryFn: () => api.get<Page>("admin/listings", table.query),
     placeholderData: (previous) => previous,
   });
   const { data: categories } = useQuery({
-    queryKey: ["admin-categories"],
-    queryFn: () => api.get<{ data: Category[] }>("admin/categories").then((response) => response.data),
+    queryKey: ["admin-categories", "all"],
+    queryFn: () => api.get<{ data: Array<{ id: number; name: string; is_active: boolean }> }>("admin/categories", { all: true }).then((response) => response.data),
   });
+  const { data: states } = useAllStates();
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["admin-listings"] });
     void queryClient.invalidateQueries({ queryKey: ["admin-counts"] });
     void queryClient.invalidateQueries({ queryKey: ["admin-analytics"] });
   };
-  const resetPage = <T,>(setter: (value: T) => void) => (value: T) => { setter(value); setPage(1); };
 
   async function moderate(listing: AdminListing, outcome: "approved" | "rejected") {
     try {
@@ -101,23 +93,27 @@ export function AdminListingsPage() {
         actions={<Button asChild><Link href="/give" target="_blank"><Plus className="size-4" /> New listing</Link></Button>}
       />
 
-      <div className="rounded-2xl border border-border bg-card shadow-soft">
+      <TableCard>
         <Toolbar>
-          <SearchInput value={q} onChange={resetPage(setQ)} placeholder="Search title or location" />
-          <FilterSelect label="Status" value={status} onChange={resetPage(setStatus)}>
+          <SearchInput value={table.q} onChange={table.setQ} placeholder="Search title, area or giver" />
+          <FilterSelect label="Status" value={table.filters.status} onChange={(value) => table.setFilter("status", value)}>
             <option value="">All statuses</option>
             {STATUSES.map((value) => <option key={value} value={value}>{humanize(value)}</option>)}
             <option value="deleted">Deleted</option>
           </FilterSelect>
-          <FilterSelect label="Moderation" value={moderation} onChange={resetPage(setModeration)}>
+          <FilterSelect label="Moderation" value={table.filters.moderation} onChange={(value) => table.setFilter("moderation", value)}>
             <option value="">Any review state</option>
             <option value="pending">Awaiting approval</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </FilterSelect>
-          <FilterSelect label="Category" value={category} onChange={resetPage(setCategory)}>
+          <FilterSelect label="Category" value={table.filters.category} onChange={(value) => table.setFilter("category", value)}>
             <option value="">All categories</option>
             {categories?.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </FilterSelect>
+          <FilterSelect label="State" value={table.filters.state} onChange={(value) => table.setFilter("state", value)}>
+            <option value="">All states</option>
+            {states?.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </FilterSelect>
         </Toolbar>
 
@@ -132,14 +128,14 @@ export function AdminListingsPage() {
               <th>Category</th>
               <th>Status</th>
               <th>Review</th>
-              <th className="text-right">Requests</th>
+              <th className="text-right">Orders</th>
               <th>Listed</th>
               <th className="text-right">Actions</th>
             </tr>
           }
         >
           {data?.data.map((listing) => (
-            <tr key={listing.id} className={cn("group transition-colors hover:bg-muted/30", listing.deleted_at && "bg-destructive/5")}>
+            <tr key={listing.id} className={cn("group", listing.deleted_at && "bg-destructive/5")}>
               {/* Item cell */}
               <td>
                 <Link href={`/admin/listings/${listing.id}/edit`} className="flex items-center gap-3 hover:opacity-80">
@@ -162,7 +158,7 @@ export function AdminListingsPage() {
               {/* Giver */}
               <td>
                 {listing.giver ? (
-                  <Link href={`/users/${listing.giver.slug}`} target="_blank" className="text-sm text-foreground/80 hover:text-primary hover:underline">
+                  <Link href={profilePath(listing.giver.slug)} target="_blank" className="text-sm text-foreground/80 hover:text-primary hover:underline">
                     {listing.giver.name}
                   </Link>
                 ) : <span className="text-muted-foreground">—</span>}
@@ -286,8 +282,8 @@ export function AdminListingsPage() {
             </tr>
           ))}
         </DataTable>
-        {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} total={data.meta.total} onPage={setPage} />}
-      </div>
+        {data && <Pagination meta={data.meta} onPage={table.setPage} onPerPage={table.setPerPage} />}
+      </TableCard>
       {confirmDialog}
     </div>
   );

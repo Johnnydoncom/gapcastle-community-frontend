@@ -44,7 +44,7 @@ export function GivePage() {
           <span className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Gift className="size-8" /></span>
           <h1 className="text-3xl font-bold">Sign in to give an item</h1>
           <p className="mt-2 text-muted-foreground">Create a free account so members across Nigeria can find your listing.</p>
-          <Button asChild size="lg" className="mt-6"><Link href={`/auth?next=${encodeURIComponent("/give")}`}>Sign in or join</Link></Button>
+          <Button asChild size="lg" className="mt-6"><Link href={`/login?next=${encodeURIComponent("/give")}`}>Sign in or join</Link></Button>
         </div>
       </div>
     );
