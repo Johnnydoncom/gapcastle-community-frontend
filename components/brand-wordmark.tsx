@@ -20,7 +20,7 @@ export function BrandWordmark({
     <span className={cn("inline-flex select-none flex-col items-stretch", className)} aria-hidden="true">
       <span
         className={cn(
-          "font-wordmark whitespace-nowrap text-[24px] uppercase leading-[0.9] tracking-[0.04em]",
+          "font-wordmark whitespace-nowrap text-[20px] sm:text-[24px] uppercase leading-[0.9] tracking-[0.04em]",
           inverted ? "text-white" : "text-brand-royal",
         )}
       >
@@ -28,7 +28,7 @@ export function BrandWordmark({
       </span>
       <span
         className={cn(
-          "font-tagline mt-[3px] whitespace-nowrap text-center text-[10px] italic leading-none",
+          "font-tagline mt-[3px] whitespace-nowrap text-center text-[8px] sm:text-[10px] italic leading-none",
           inverted ? "text-brand-yellow-300" : "text-foreground/70",
         )}
       >
