@@ -113,7 +113,7 @@ const HERO_SLIDES: HeroSlide[] = [
     imagePosition: "50% 62%",
     tone: "blue",
     primary: { href: "/explore", label: "Pick an item for free" },
-    secondary: { href: "/give", label: "Give an item" },
+    secondary: { href: "/give", label: "Give an item" }
   },
   {
     key: "delivery",
