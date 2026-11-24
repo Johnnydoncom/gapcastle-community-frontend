@@ -102,6 +102,12 @@ export function HomePage() {
 
 /* ---------------------------------- Hero ---------------------------------- */
 
+/**
+ * Slide photos live in public/hero (1536×1024 WebP, served as-is: image optimisation is off).
+ * Each was shot with calm negative space on the left in its tone's panel colour (blue, navy,
+ * cream) so the text wash blends in. The slide box is squarer than the photo, so only the
+ * horizontal crop matters: `imagePosition` keeps each subject clear of the text column.
+ */
 const HERO_SLIDES: HeroSlide[] = [
   {
     key: "free",
@@ -109,8 +115,8 @@ const HERO_SLIDES: HeroSlide[] = [
     title: "Give with kindness.",
     highlight: "Receive with care.",
     text: "Useful things shared by people across Nigeria. Check out in seconds — the item and delivery cost ₦0.",
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=70",
-    imagePosition: "50% 62%",
+    image: "/hero/give-receive.webp",
+    imagePosition: "68% center",
     tone: "blue",
     primary: { href: "/explore", label: "Pick an item for free" },
     secondary: { href: "/give", label: "Give an item" }
@@ -121,8 +127,8 @@ const HERO_SLIDES: HeroSlide[] = [
     title: "No hub near you?",
     highlight: "We deliver free.",
     text: "Collect from our Lagos pickup hub, or choose delivery at checkout and Gratis Castle brings it to your door at no cost.",
-    image: "https://images.unsplash.com/photo-1580674285054-bed31e145f59?w=1400&q=70",
-    imagePosition: "center",
+    image: "/hero/free-delivery.webp",
+    imagePosition: "58% center",
     tone: "navy",
     primary: { href: "/explore", label: "Find something free" },
     secondary: { href: "/pickup-hubs", label: "Pickup hub" },
@@ -133,8 +139,8 @@ const HERO_SLIDES: HeroSlide[] = [
     title: "Repair, reuse,",
     highlight: "give it new life.",
     text: "Broken but fixable? List it in Damaged but Valuable — someone handy will be glad to give it a second chance.",
-    image: "https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=1400&q=70",
-    imagePosition: "center",
+    image: "/hero/repair-reuse.webp",
+    imagePosition: "66% center",
     tone: "yellow",
     primary: { href: "/categories/damaged-but-valuable", label: "Browse repair & reuse" },
     secondary: { href: "/give", label: "Give a damaged item" },
@@ -146,8 +152,8 @@ const HERO_SLIDES: HeroSlide[] = [
     title: "A gift should never",
     highlight: "cost your safety.",
     text: SAFETY_BANNER.body,
-    image: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1400&q=70",
-    imagePosition: "center",
+    image: "/hero/stay-safe.webp",
+    imagePosition: "56% center",
     tone: "navy",
     primary: { href: "/contact?topic=safety", label: "Report" },
     secondary: { href: "/safety", label: "Safety tips" },
