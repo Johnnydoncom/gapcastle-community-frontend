@@ -86,8 +86,8 @@ export function RegisterForm() {
         <Label htmlFor="location">General area <span className="font-normal text-muted-foreground">(optional)</span></Label>
         <AuthInput id="location" name="address-level2" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Yaba, Lagos" autoComplete="address-level2" autoCapitalize="words" enterKeyHint="done" maxLength={120} />
       </div>
-      <label className="flex cursor-pointer items-start gap-3 p-y-2 text-sm">
-        <Checkbox checked={adult} onCheckedChange={(v) => setAdult(v === true)} className="mmt-0.5" aria-required="true" />
+      <label className="flex cursor-pointer items-start gap-3 py-2 text-sm">
+        <Checkbox checked={adult} onCheckedChange={(v) => setAdult(v === true)} className="mt-1" aria-required="true" />
         <span><strong>I confirm I am 18 years or older.</strong> <span className="text-muted-foreground">Gratis Castle is for adults only, and each person may have only one account.</span></span>
       </label>
       <p className="text-xs leading-relaxed text-muted-foreground">
