@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, backendUrl } from "@/lib/server/backend";
+import { GUEST_HINT_COOKIE } from "@/lib/auth-paths";
+import { BACKEND_TIMEOUT_MS, SESSION_COOKIE, backendUrl, guestHintCookieOptions } from "@/lib/server/backend";
+
+/** Hard cap on billed function time per call (Vercel default is 300 s). */
+export const maxDuration = 30;
 
 /**
  * Same-origin proxy to the Laravel API. It forwards the request and attaches the member's
@@ -30,6 +34,8 @@ async function forward(request: NextRequest, ctx: RouteContext<"/api/backend/[..
       body: hasBody ? await request.arrayBuffer() : undefined,
       cache: "no-store",
       redirect: "manual",
+      // Uploads get longer than page data, but never the platform's 300 s default.
+      signal: AbortSignal.timeout(hasBody ? 25_000 : BACKEND_TIMEOUT_MS),
     });
   } catch {
     return NextResponse.json(
@@ -48,6 +54,14 @@ async function forward(request: NextRequest, ctx: RouteContext<"/api/backend/[..
   if (upstream.status === 401 && token) {
     response.cookies.delete(SESSION_COOKIE);
   }
+
+  // Not signed in: tell the browser, so it stops asking "who am I?" on every page.
+  if (upstream.status === 401 && request.method === "GET" && path.join("/") === "auth/me") {
+    response.cookies.set(GUEST_HINT_COOKIE, "1", guestHintCookieOptions);
+  }
+
+  // Member data must never be stored by a shared cache.
+  response.headers.set("Cache-Control", "private, no-store");
 
   return response;
 }

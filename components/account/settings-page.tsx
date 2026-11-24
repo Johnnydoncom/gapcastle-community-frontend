@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SESSION_KEY, useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
+import { MAX_ORIGINAL_BYTES, compressImage } from "@/lib/image-compress";
 import type { Account, NgState } from "@/lib/types";
 
 function errorMessage(err: unknown, fallback: string) {
@@ -108,14 +109,16 @@ function ProfileForm({ user }: { user: Account }) {
 
   async function uploadAvatar(file: File | undefined) {
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Please choose an image under 2 MB");
-      return;
-    }
     setUploading(true);
     try {
+      // Avatars are shown small: 800 px is plenty, and keeps the upload well under the 2 MB limit.
+      const small = file.size <= MAX_ORIGINAL_BYTES ? await compressImage(file, { maxDimension: 800 }) : file;
+      if (small.size > 2 * 1024 * 1024) {
+        toast.error("Please choose an image under 2 MB");
+        return;
+      }
       const body = new FormData();
-      body.append("avatar", file);
+      body.append("avatar", small);
       const response = await api.post<{ data: Account; message: string }>("me/avatar", body);
       updateAccount(response.data);
       toast.success(response.message);

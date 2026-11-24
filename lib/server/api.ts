@@ -1,8 +1,9 @@
 import "server-only";
 
 import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, backendUrl } from "./backend";
+import { BACKEND_TIMEOUT_MS, SESSION_COOKIE, backendUrl } from "./backend";
 import type {
   Account,
   Announcement,
@@ -33,8 +34,6 @@ export class ServerApiError extends Error {
 type RequestOptions = {
   /** Send the member's session token so owner-only fields and is_saved are accurate. */
   authenticated?: boolean;
-  /** Seconds to cache the response. Omit for fresh, request-time data. */
-  revalidate?: number;
 };
 
 function queryString(query?: ServerQuery): string {
@@ -48,7 +47,15 @@ function queryString(query?: ServerQuery): string {
   return text ? `?${text}` : "";
 }
 
-const cachedGet = cache(async (path: string, search: string, authenticated: boolean, revalidate?: number): Promise<unknown> => {
+function apiError(status: number): ServerApiError {
+  return new ServerApiError(status, status === 404 ? "Not found" : "The community service is unavailable.");
+}
+
+/**
+ * Request-time data (listings, profiles, the viewer). Never stored in a shared cache, because
+ * it can depend on who is asking. React `cache()` dedupes repeat calls within one render.
+ */
+const requestGet = cache(async (path: string, search: string, authenticated: boolean): Promise<unknown> => {
   const headers = new Headers({ Accept: "application/json" });
 
   if (authenticated) {
@@ -56,22 +63,140 @@ const cachedGet = cache(async (path: string, search: string, authenticated: bool
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${backendUrl(path)}${search}`, {
-    headers,
-    ...(revalidate === undefined
-      ? { cache: "no-store" as const }
-      : { next: { revalidate } }),
+  // A hard timeout: a slow API must not keep a Vercel function (and its billed memory) waiting.
+  const response = await fetch(`${backendUrl(path)}${search}`, { headers, cache: "no-store", signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) }).catch(() => {
+    throw apiError(504);
   });
 
   if (!response.ok) {
-    throw new ServerApiError(response.status, response.status === 404 ? "Not found" : "The community service is unavailable.");
+    throw apiError(response.status);
   }
 
   return response.json();
 });
 
 async function serverGet<T>(path: string, query?: ServerQuery, options: RequestOptions = {}): Promise<T> {
-  return (await cachedGet(path, queryString(query), options.authenticated ?? true, options.revalidate)) as T;
+  return (await requestGet(path, queryString(query), options.authenticated ?? true)) as T;
+}
+
+/*
+ * Shared public data
+ * ------------------
+ * Everything below is the same for every visitor, so it is fetched WITHOUT the member's token
+ * and kept in one shared `use cache` entry per URL. That keeps Vercel usage flat:
+ *   - no per-member copies (a token in the request used to create one cache entry per member),
+ *   - no fetch Data Cache writes (each one is billed as an ISR write on Vercel),
+ *   - pages whose static shell uses this data regenerate at most hourly instead of every minute.
+ * Admin edits still show up straight away: the API calls /api/revalidate with these tags
+ * whenever the underlying records change (see the backend's App\Support\FrontendCache).
+ */
+
+/** Cache tags shared with the backend's FrontendCache purge list. Keep the two in sync. */
+export const CACHE_TAGS = {
+  categories: "categories",
+  locations: "locations",
+  states: "states",
+  stats: "stats",
+  announcements: "announcements",
+  siteInfo: "site-info",
+  reviews: "reviews",
+  seoPages: "seo-pages",
+} as const;
+
+type PublicResult = { ok: true; body: unknown } | { ok: false; status: number };
+
+/**
+ * One public GET. Failures are returned (not thrown) so they can be given a short cache life:
+ * a backend hiccup must never be stored for an hour.
+ */
+async function publicFetch(path: string, search = ""): Promise<PublicResult> {
+  try {
+    const response = await fetch(`${backendUrl(path)}${search}`, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
+    if (!response.ok) return { ok: false, status: response.status };
+    return { ok: true, body: await response.json() };
+  } catch {
+    return { ok: false, status: 503 };
+  }
+}
+
+/** Unwrap a cached public result, throwing the same ServerApiError callers already handle. */
+async function unwrap<T>(result: Promise<PublicResult>): Promise<T> {
+  const value = await result;
+  if (!value.ok) throw apiError(value.status);
+  return value.body as T;
+}
+
+/** Call inside a `use cache` scope: an hour for good answers, 30 seconds for failures (404 counts as an answer). */
+function lifeFor(result: PublicResult): PublicResult {
+  if (!result.ok && result.status !== 404) {
+    cacheLife({ stale: 30, revalidate: 30, expire: 300 });
+  } else {
+    cacheLife("hours");
+  }
+  return result;
+}
+
+async function cachedCategories(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.categories);
+  return lifeFor(await publicFetch("categories"));
+}
+
+async function cachedCategory(slug: string): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.categories);
+  return lifeFor(await publicFetch(`categories/${encodeURIComponent(slug)}`));
+}
+
+async function cachedLocations(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.locations);
+  return lifeFor(await publicFetch("listings/locations"));
+}
+
+async function cachedStates(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.states);
+  return lifeFor(await publicFetch("states"));
+}
+
+async function cachedStats(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.stats);
+  return lifeFor(await publicFetch("stats"));
+}
+
+async function cachedAnnouncements(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.announcements);
+  return lifeFor(await publicFetch("announcements"));
+}
+
+async function cachedSiteInfo(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.siteInfo);
+  return lifeFor(await publicFetch("site-info"));
+}
+
+async function cachedReviews(): Promise<PublicResult> {
+  "use cache";
+  cacheTag(CACHE_TAGS.reviews);
+  return lifeFor(await publicFetch("reviews"));
+}
+
+/**
+ * Nearest LGA to a point. Vercel's IP location is city-level, so the point is rounded to ~1 km
+ * and the answer kept for a week: a handful of entries cover the whole country.
+ */
+async function cachedLocate(lat: string, lng: string): Promise<PublicResult> {
+  "use cache";
+  const result = await publicFetch("locate", `?lat=${lat}&lng=${lng}`);
+  if (!result.ok && result.status !== 404) {
+    cacheLife({ stale: 30, revalidate: 30, expire: 300 });
+  } else {
+    cacheLife("weeks");
+  }
+  return result;
 }
 
 export type ListingQuery = {
@@ -106,11 +231,11 @@ export function getRelatedListings(listingId: number): Promise<{ data: Listing[]
 }
 
 export function getCategories(): Promise<{ data: Category[] }> {
-  return serverGet<{ data: Category[] }>("categories", undefined, { authenticated: false, revalidate: 60 });
+  return unwrap(cachedCategories());
 }
 
 export function getCategory(slug: string): Promise<{ data: Category }> {
-  return serverGet<{ data: Category }>(`categories/${encodeURIComponent(slug)}`, undefined, { revalidate: 60 });
+  return unwrap(cachedCategory(slug));
 }
 
 export function getProfile(slug: string): Promise<{
@@ -122,37 +247,37 @@ export function getProfile(slug: string): Promise<{
 }
 
 export function getLocations(): Promise<{ data: LocationOption[] }> {
-  return serverGet<{ data: LocationOption[] }>("listings/locations", undefined, { revalidate: 60 });
+  return unwrap(cachedLocations());
 }
 
-/** Nigerian states with their active pickup hubs (public, cached briefly). */
+/** Nigerian states with their active pickup hubs (public, shared cache). */
 export function getStates(): Promise<{ data: NgState[] }> {
-  return serverGet<{ data: NgState[] }>("states", undefined, { authenticated: false, revalidate: 60 });
+  return unwrap(cachedStates());
 }
 
 export type LocateResult = { lga: { id: number; name: string; slug: string }; state: { id: number; name: string; slug: string } };
 
 /** Nearest LGA to a point. Used only to turn an approximate position into an area; the point is not stored. */
 export function locateArea(lat: number, lng: number): Promise<{ data: LocateResult }> {
-  return serverGet<{ data: LocateResult }>("locate", { lat: lat.toFixed(3), lng: lng.toFixed(3) }, { authenticated: false, revalidate: 86400 });
+  return unwrap(cachedLocate(lat.toFixed(2), lng.toFixed(2)));
 }
 
 export function getStats(): Promise<{ data: CommunityStats }> {
-  return serverGet<{ data: CommunityStats }>("stats", undefined, { revalidate: 60 });
+  return unwrap(cachedStats());
 }
 
 export function getAnnouncements(): Promise<{ data: Announcement[] }> {
-  return serverGet<{ data: Announcement[] }>("announcements", undefined, { revalidate: 60 });
+  return unwrap(cachedAnnouncements());
 }
 
-/** Contact details, social links and footer text managed in Admin › Settings (public, cached briefly). */
+/** Contact details, social links and footer text managed in Admin › Settings (public, shared cache). */
 export function getSiteInfo(): Promise<{ data: SiteInfo }> {
-  return serverGet<{ data: SiteInfo }>("site-info", undefined, { authenticated: false, revalidate: 60 });
+  return unwrap(cachedSiteInfo());
 }
 
-/** Recent community reviews for the homepage (public, cached briefly). */
+/** Recent community reviews for the homepage (public, shared cache). */
 export function getReviews(): Promise<{ data: Review[] }> {
-  return serverGet<{ data: Review[] }>("reviews", undefined, { authenticated: false, revalidate: 60 });
+  return unwrap(cachedReviews());
 }
 
 export type ViewerResponse = {

@@ -33,13 +33,13 @@ import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { CONDITION_LABELS } from "@/lib/gapcastle";
 import type { Category, HandoverMethod, Listing, NgState } from "@/lib/types";
+import { MAX_ORIGINAL_BYTES, MAX_UPLOAD_BYTES, compressImage } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
 
 type Photo = { key: string; path?: string; url: string; progress: number; error?: string };
 type Errors = Record<string, string | undefined>;
 
 const MAX_PHOTOS = 8;
-const MAX_BYTES = 5 * 1024 * 1024;
 const PHONE_PATTERN = /^(\+?234|0)[789][01]\d{8}$/;
 const CONDITION_HINTS: Record<string, string> = {
   brand_new: "Unused, possibly still in its packaging.",
@@ -163,13 +163,18 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
         toast.error(`${file.name} is not an image`);
         continue;
       }
-      if (file.size > MAX_BYTES) {
-        toast.error(`${file.name} is larger than 5 MB`);
+      if (file.size > MAX_ORIGINAL_BYTES) {
+        toast.error(`${file.name} is too large — please choose a smaller photo`);
         continue;
       }
       const key = crypto.randomUUID();
       setPhotos((prev) => [...prev, { key, url: URL.createObjectURL(file), progress: 0 }]);
-      uploadPhoto(file, (progress) => setPhotos((prev) => prev.map((p) => (p.key === key ? { ...p, progress } : p))))
+      // Shrink in the browser first: faster for the giver, and under the hosting upload limit.
+      compressImage(file)
+        .then((small) => {
+          if (small.size > MAX_UPLOAD_BYTES) throw new Error(`${file.name} is too large — please choose a smaller photo`);
+          return uploadPhoto(small, (progress) => setPhotos((prev) => prev.map((p) => (p.key === key ? { ...p, progress } : p))));
+        })
         .then(({ path }) => setPhotos((prev) => prev.map((p) => (p.key === key ? { ...p, path, progress: 100 } : p))))
         .catch((error: Error) => {
           toast.error(error.message);

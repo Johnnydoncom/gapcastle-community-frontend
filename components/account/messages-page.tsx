@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/form-fields";
 import { SESSION_KEY } from "@/hooks/use-session";
 import { useAuth } from "@/hooks/use-auth";
 import { ApiError, api } from "@/lib/api";
+import { MAX_ORIGINAL_BYTES, MAX_UPLOAD_BYTES, compressImage } from "@/lib/image-compress";
 import { timeAgo } from "@/lib/gapcastle";
 import { listingPath, profilePath } from "@/lib/site";
 
@@ -53,14 +54,18 @@ export function MessagesPage() {
   const conversations = useQuery({
     queryKey: ["conversations"],
     queryFn: async () => (await api.get<{ data: ApiConversation[] }>("conversations")).data,
-    refetchInterval: 15_000,
+    // Each poll is a serverless invocation; polling pauses in background tabs and catches up on focus.
+    refetchInterval: 45_000,
+    refetchOnWindowFocus: true,
   });
   const selectedId = conversationId ?? (conversations.data?.[0] ? String(conversations.data[0].id) : undefined);
   const selected = conversations.data?.find((conversation) => String(conversation.id) === selectedId);
   const messages = useQuery({
     queryKey: ["conversation-messages", selectedId],
     enabled: !!selectedId,
-    refetchInterval: 5_000,
+    // The open thread polls faster than the list, but not every 5 s (720 calls an hour per open tab).
+    refetchInterval: 12_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => (await api.get<{ data: MessageRow[] }>(`conversations/${selectedId}/messages`)).data,
   });
   const other = useMemo(() => selected && (selected.giver_id === me ? selected.requester : selected.giver), [selected, me]);
@@ -84,9 +89,14 @@ export function MessagesPage() {
     setSending(true);
     try {
       if (image) {
+        const small = await compressImage(image);
+        if (small.size > MAX_UPLOAD_BYTES) {
+          toast.error("That photo is too large — please choose a smaller one");
+          return;
+        }
         const form = new FormData();
         if (body) form.append("body", body);
-        form.append("image", image);
+        form.append("image", small);
         await api.post(`conversations/${selectedId}/messages`, form);
       } else {
         await api.post(`conversations/${selectedId}/messages`, { body });
@@ -173,7 +183,7 @@ export function MessagesPage() {
               <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} aria-label="Attach a photo"><ImagePlus className="size-4" /></Button>
               <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file && file.size > 5 * 1024 * 1024) toast.error("Photos must be 5 MB or smaller");
+                if (file && file.size > MAX_ORIGINAL_BYTES) toast.error("That photo is too large — please choose a smaller one");
                 else setImage(file ?? null);
                 e.target.value = "";
               }} />

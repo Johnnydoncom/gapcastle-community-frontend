@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, backendUrl, sessionCookieOptions } from "@/lib/server/backend";
+import { GUEST_HINT_COOKIE } from "@/lib/auth-paths";
+import { BACKEND_TIMEOUT_MS, SESSION_COOKIE, backendUrl, guestHintCookieOptions, sessionCookieOptions } from "@/lib/server/backend";
+
+export const maxDuration = 30;
 
 const ENDPOINTS: Record<string, string> = {
   login: "auth/login",
@@ -27,10 +30,12 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/auth/[a
       await fetch(backendUrl(endpoint), {
         method: "POST",
         headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
       }).catch(() => undefined);
     }
     const response = NextResponse.json({ message: "Signed out." });
     response.cookies.delete(SESSION_COOKIE);
+    response.cookies.set(GUEST_HINT_COOKIE, "1", guestHintCookieOptions);
     return response;
   }
 
@@ -48,6 +53,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/auth/[a
       },
       body: JSON.stringify({ ...body, device_name: "web" }),
       cache: "no-store",
+      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
     });
   } catch {
     return NextResponse.json(
@@ -64,5 +70,6 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/auth/[a
 
   const response = NextResponse.json({ user: payload.user }, { status: upstream.status });
   response.cookies.set(SESSION_COOKIE, payload.token, sessionCookieOptions);
+  response.cookies.delete(GUEST_HINT_COOKIE);
   return response;
 }

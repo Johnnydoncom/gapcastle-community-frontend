@@ -185,12 +185,13 @@ export function AdminActivityPage() {
     queryKey: ["admin-activity", table.query],
     queryFn: () => api.get<Paged<ActivityRow>>("admin/activity", table.query),
     placeholderData: (previous) => previous,
-    refetchInterval: 30_000,
+    refetchInterval: 120_000,
+    refetchOnWindowFocus: true,
   });
 
   return (
     <div>
-      <PageHeader title="Activity log" description="Every important action across the community and the dashboard, newest first. Refreshes every 30 seconds." />
+      <PageHeader title="Activity log" description="Every important action across the community and the dashboard, newest first. Refreshes every 2 minutes." />
       <TableCard>
         <Toolbar>
           <SearchInput value={table.q} onChange={table.setQ} placeholder="Search action or person" />

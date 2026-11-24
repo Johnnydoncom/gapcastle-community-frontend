@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { backendUrl } from "@/lib/server/backend";
+import { cacheLife, cacheTag } from "next/cache";
+import { BACKEND_TIMEOUT_MS, backendUrl } from "@/lib/server/backend";
 import { categoryPath, listingPath, profilePath, SITE_URL } from "@/lib/site";
 import type { Category, Listing, Paginated } from "@/lib/types";
 
@@ -23,7 +24,6 @@ const STATIC_ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitema
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];
 
-const SITEMAP_REVALIDATE_SECONDS = 3600;
 const MAX_LISTING_PAGES = 80;
 /** The browse endpoint caps `per_page` at 60. */
 const LISTINGS_PER_PAGE = 60;
@@ -31,10 +31,7 @@ const LISTINGS_PER_PAGE = 60;
 /** Fetch public data without requiring a member session; failures never break the sitemap. */
 async function apiGet<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(backendUrl(path), {
-      headers: { Accept: "application/json" },
-      next: { revalidate: SITEMAP_REVALIDATE_SECONDS },
-    });
+    const response = await fetch(backendUrl(path), { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
 
     if (!response.ok) {
       return null;
@@ -46,7 +43,18 @@ async function apiGet<T>(path: string): Promise<T | null> {
   }
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+type SitemapListing = { slug: string; createdAt: string; giverSlug: string | null };
+type SitemapData = { categorySlugs: string[]; listings: SitemapListing[] };
+
+/**
+ * Everything the sitemap needs, gathered once and kept for an hour as ONE cache entry.
+ * (Caching each of the ~80 page fetches separately cost ~80 ISR writes an hour on Vercel.)
+ */
+async function sitemapData(): Promise<SitemapData> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("sitemap");
+
   const [categoryResponse, firstListingPage] = await Promise.all([
     apiGet<{ data: Category[] }>("categories"),
     apiGet<Paginated<Listing>>(`listings?available_only=1&per_page=${LISTINGS_PER_PAGE}&page=1`),
@@ -71,8 +79,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Keep only what the sitemap uses, so the cache entry stays small.
+  return {
+    categorySlugs: categories.map((category) => category.slug),
+    listings: listings.map((listing) => ({ slug: listing.slug, createdAt: listing.created_at, giverSlug: listing.giver?.slug ?? null })),
+  };
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { categorySlugs, listings } = await sitemapData();
+
   const giverSlugs = Array.from(
-    new Set(listings.map((listing) => listing.giver?.slug).filter((slug): slug is string => Boolean(slug))),
+    new Set(listings.map((listing) => listing.giverSlug).filter((slug): slug is string => Boolean(slug))),
   );
 
   return [
@@ -81,14 +99,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency,
       priority,
     })),
-    ...categories.map((category) => ({
-      url: `${SITE_URL}${categoryPath(category.slug)}`,
+    ...categorySlugs.map((slug) => ({
+      url: `${SITE_URL}${categoryPath(slug)}`,
       changeFrequency: "daily" as const,
       priority: 0.7,
     })),
     ...listings.map((listing) => ({
       url: `${SITE_URL}${listingPath(listing.slug)}`,
-      lastModified: new Date(listing.created_at),
+      lastModified: new Date(listing.createdAt),
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),

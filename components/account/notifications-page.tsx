@@ -18,7 +18,8 @@ export function NotificationsPage() {
   const notifications = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => (await api.get<{ data: NotificationRow[] }>("notifications")).data,
-    refetchInterval: 30_000,
+    refetchInterval: 90_000,
+    refetchOnWindowFocus: true,
   });
   const unread = (notifications.data ?? []).filter((notification) => !notification.read);
 

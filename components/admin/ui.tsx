@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ApiError, api } from "@/lib/api";
+import { MAX_ORIGINAL_BYTES, MAX_UPLOAD_BYTES, compressImage } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
 
 /** Shared building blocks for every admin screen, so the dashboard feels like one product. */
@@ -338,15 +339,20 @@ export function ImageUploadField({ folder, value, previewUrl, onChange, disabled
   const [busy, setBusy] = useState(false);
 
   async function upload(file: File) {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Images must be 5 MB or smaller.");
+    if (file.size > MAX_ORIGINAL_BYTES) {
+      toast.error("That image is too large — please choose a smaller one.");
       return;
     }
     setBusy(true);
     try {
+      const small = await compressImage(file, { maxDimension: 2400 });
+      if (small.size > MAX_UPLOAD_BYTES) {
+        toast.error("Images must be 4 MB or smaller.");
+        return;
+      }
       const form = new FormData();
       form.append("folder", folder);
-      form.append("image", file);
+      form.append("image", small);
       const response = await api.post<{ path: string; url: string }>("admin/uploads", form);
       onChange(response.path, response.url);
     } catch (err) {

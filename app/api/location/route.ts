@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AREA_COOKIE } from "@/lib/server/area";
-import { backendUrl } from "@/lib/server/backend";
+import { BACKEND_TIMEOUT_MS, backendUrl } from "@/lib/server/backend";
+
+export const maxDuration = 30;
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   if (typeof body.lat === "number" && typeof body.lng === "number") {
     const url = `${backendUrl("locate")}?lat=${body.lat.toFixed(3)}&lng=${body.lng.toFixed(3)}`;
-    const upstream = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" }).catch(() => null);
+    const upstream = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) }).catch(() => null);
     const payload = upstream ? await upstream.json().catch(() => ({})) : {};
     if (!upstream?.ok || !payload?.data) {
       const firstError = payload?.errors ? (Object.values(payload.errors as Record<string, string[]>)[0]?.[0] ?? null) : null;

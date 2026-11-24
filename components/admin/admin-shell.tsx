@@ -100,7 +100,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     queryKey: ["admin-counts"],
     queryFn: () => api.get<{ data: Counts }>("admin/overview").then((response) => response.data),
     enabled: !!user?.is_moderator,
-    refetchInterval: 60_000,
+    refetchInterval: 180_000,
+    refetchOnWindowFocus: true,
   });
 
   // The admin login page lives under /admin/login but should render without the shell chrome.
