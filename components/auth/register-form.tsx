@@ -74,20 +74,20 @@ export function RegisterForm() {
         <AuthInput id="email" name="email" {...EMAIL_INPUT_PROPS} enterKeyHint="next" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </div>
       <div className="space-y-1.5">
+        <Label htmlFor="phone">Phone number</Label>
+        <AuthInput id="phone" name="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0803 123 4567" autoComplete="tel" enterKeyHint="next" required aria-describedby="phone-hint" />
+      </div>
+      <div className="space-y-1.5">
         <Label htmlFor="password">Password</Label>
         <PasswordInput id="password" name="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8+ characters with letters and numbers" autoComplete="new-password" enterKeyHint="next" minLength={8} required />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="phone">Phone number</Label>
-        <AuthInput id="phone" name="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0803 123 4567" autoComplete="tel" enterKeyHint="next" required aria-describedby="phone-hint" />
-        <p id="phone-hint" className="text-xs text-muted-foreground">Private — used for pickups and deliveries. One account per phone number.</p>
-      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="location">General area <span className="font-normal text-muted-foreground">(optional)</span></Label>
         <AuthInput id="location" name="address-level2" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Yaba, Lagos" autoComplete="address-level2" autoCapitalize="words" enterKeyHint="done" maxLength={120} />
       </div>
       <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted/40 p-3.5 text-sm">
-        <Checkbox checked={adult} onCheckedChange={(v) => setAdult(v === true)} className="mt-0.5"aria-required="true" />
+        <Checkbox checked={adult} onCheckedChange={(v) => setAdult(v === true)} className="mt-0.5" aria-required="true" />
         <span><strong>I confirm I am 18 years or older.</strong> <span className="text-muted-foreground">Gratis Castle is for adults only, and each person may have only one account.</span></span>
       </label>
       <p className="text-xs leading-relaxed text-muted-foreground">
