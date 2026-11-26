@@ -6,7 +6,7 @@ import { getStats } from "@/lib/server/api";
 import type { CommunityStats } from "@/lib/types";
 
 const VALUES = [
-  { icon: HandHeart, title: "100% free", text: "Nothing on Gratis Castle is sold, and Gratis Castle delivers items free of charge." },
+  { icon: HandHeart, title: "100% free", text: "Nothing on Gratis Castle is sold, and collecting from our pickup hub is free." },
   { icon: ShieldCheck, title: "Safe and private", text: "Only general areas are public, verified members are marked, and moderators review every report." },
   { icon: Leaf, title: "Less waste", text: "Every item that finds a second home is one less thing thrown away." },
   { icon: MessageCircle, title: "Real connections", text: "Every item listed is a gift freely given — and every thank-you message counts." },

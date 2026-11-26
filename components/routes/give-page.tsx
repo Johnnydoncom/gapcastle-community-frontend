@@ -55,7 +55,7 @@ export function GivePage() {
       <div className="mb-6 sm:mb-8">
         <Badge variant="free" className="mb-3">100% free</Badge>
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Give an item for free</h1>
-        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground sm:text-base">Someone could use what you no longer need. Add a few honest details — Gratis Castle handles the handover and delivers it free, and you never meet the receiver.</p>
+        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground sm:text-base">Someone could use what you no longer need. Add a few honest details — Gratis Castle handles the handover, and you never meet the receiver.</p>
       </div>
       <ListingForm key={formKey} onSaved={(listing, message) => setPublished({ listing, message })} />
     </div>

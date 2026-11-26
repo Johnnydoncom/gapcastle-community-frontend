@@ -23,8 +23,8 @@ const JOURNEYS: Journey[] = [
     cta: { href: "/explore", label: "Find something free" },
     steps: [
       { icon: PackageSearch, title: "Find it", text: "Browse free items near you." },
-      { icon: HandHeart, title: "Check out for ₦0", text: "No approval needed. Delivery is free too." },
-      { icon: PackageCheck, title: "Collect or receive", text: "Pick up at our hub, or we deliver to you." },
+      { icon: HandHeart, title: "Check out for ₦0", text: "No approval needed. The item is always free." },
+      { icon: PackageCheck, title: "Collect or receive", text: "Pick up free at our hub, or get it delivered at your cost." },
     ],
   },
   {
@@ -116,7 +116,7 @@ export function HowItWorksSteps() {
                 {journey.cta.label} <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ShieldCheck className="size-3.5 text-success" /> ₦0 item · ₦0 delivery · you never meet strangers
+                <ShieldCheck className="size-3.5 text-success" /> ₦0 item · free hub pickup · you never meet strangers
               </p>
             </div>
           </div>

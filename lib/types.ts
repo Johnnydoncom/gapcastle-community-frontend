@@ -120,7 +120,23 @@ export type NgState = StateSummary & {
 
 export type TimelineStep = { key: string; label: string; done: boolean; current: boolean };
 
-/** A free order (claim). Item and delivery are always ₦0. */
+/**
+ * What an order costs the receiver. The item and hub pickup are always ₦0. Delivery is
+ * paid by the receiver: `delivery` is null until Gratis Castle quotes it on the order.
+ * Givers only ever see `item` and `currency`.
+ */
+export type OrderCharges = {
+  item: 0;
+  currency: "NGN";
+  delivery?: number | null;
+  total?: number | null;
+  delivery_paid_by?: "receiver" | null;
+  delivery_fee_status?: "free" | "pending_quote" | "quoted";
+  delivery_fee_quoted_at?: string | null;
+  delivery_fee_note?: string | null;
+};
+
+/** An order (claim). The item is always ₦0; hub pickup is free; delivery is paid by the receiver. */
 export type ItemRequest = {
   id: number;
   order_number: string;
@@ -133,7 +149,7 @@ export type ItemRequest = {
   timeline: TimelineStep[];
   introduction: string | null;
   preferred_arrangement: string | null;
-  totals: { item: 0; delivery: 0; total: 0; currency: "NGN" };
+  totals: OrderCharges;
   state?: StateSummary | null;
   pickup_location?: PickupLocation | null;
   /** Only present for the receiver and Gratis Castle staff — never the giver. */

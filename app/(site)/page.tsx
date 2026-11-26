@@ -6,7 +6,7 @@ import { howItWorksJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 const baseMetadata: Metadata = {
   title: { absolute: "Gratis Castle — Free items in Nigeria | Give freely, receive gratefully" },
-  description: "Nigeria's free community marketplace. Find useful things shared for free by neighbours, give away what you no longer need, and collect safely from our Lagos pickup hub or get it delivered free anywhere in Nigeria.",
+  description: "Nigeria's free community marketplace. Find useful things shared for free by neighbours, give away what you no longer need, and collect free and safely from our Lagos pickup hub, or have it delivered anywhere in Nigeria at your cost.",
   alternates: { canonical: "/" },
   keywords: ["free items Nigeria", "free stuff Lagos", "give away items Nigeria", "free marketplace Nigeria", "community marketplace Lagos", "free furniture Nigeria", "free electronics Lagos", "Gratis Castle"],
   other: {

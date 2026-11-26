@@ -5,7 +5,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 import { LOGIN_PATH, REGISTER_PATH } from "@/lib/auth-paths";
 
 const title = "Join free — create your account";
-const description = "Create a free Gratis Castle account to give away items you no longer need and claim free items near you in Nigeria. No fees, ever — pickup hubs and free delivery.";
+const description = "Create a free Gratis Castle account to give away items you no longer need and claim free items near you in Nigeria. Items are always free — collect free at our pickup hub, or choose delivery at your cost.";
 
 export const metadata: Metadata = {
   title,

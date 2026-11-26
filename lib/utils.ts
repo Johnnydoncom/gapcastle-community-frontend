@@ -32,6 +32,11 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-NG").format(value);
 }
 
+/** ₦3,500 — whole naira, kobo only when there is some. */
+export function formatNaira(value: number): string {
+  return `₦${new Intl.NumberFormat("en-NG", { maximumFractionDigits: 2 }).format(value)}`;
+}
+
 export function initials(name: string | null | undefined): string {
   return (name ?? "?")
     .split(/\s+/)

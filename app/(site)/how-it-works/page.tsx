@@ -7,9 +7,9 @@ import { howItWorksJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 const baseMetadata: Metadata = {
   title: "How Gratis Castle works — Give & receive free items in Nigeria",
-  description: `${CONTENT_PAGES["how-it-works"].intro} Pickup hub in Lagos, free delivery across Nigeria.`,
+  description: `${CONTENT_PAGES["how-it-works"].intro} Free pickup at our Lagos hub, or delivery across Nigeria at your cost.`,
   alternates: { canonical: "/how-it-works" },
-  keywords: ["how Gratis Castle works", "free items Nigeria how to", "pickup hubs Lagos", "free delivery Nigeria", "give items free"],
+  keywords: ["how Gratis Castle works", "free items Nigeria how to", "pickup hubs Lagos", "item delivery Nigeria", "give items free"],
 };
 
 /** Built-in metadata, with any overrides saved in Admin › Pages & SEO on top. */

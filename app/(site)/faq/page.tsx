@@ -7,7 +7,7 @@ import { faqJsonLdFromContent, breadcrumbJsonLd } from "@/lib/seo";
 
 const baseMetadata: Metadata = {
   title: "FAQs — Free items marketplace Nigeria",
-  description: `${CONTENT_PAGES["faq"].intro} Learn how Gratis Castle works, our Lagos pickup hub, free delivery across Nigeria and more.`,
+  description: `${CONTENT_PAGES["faq"].intro} Learn how Gratis Castle works, our free Lagos pickup hub, delivery across Nigeria and more.`,
   alternates: { canonical: "/faq" },
   keywords: ["Gratis Castle FAQ", "free items FAQ Nigeria", "how Gratis Castle works", "pickup hubs Lagos", "free marketplace questions"],
 };

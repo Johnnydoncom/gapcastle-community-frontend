@@ -169,7 +169,7 @@ export function MessagesPage() {
                   </div>
                 </div>
               </div>
-            )) : <p className="py-10 text-center text-sm text-muted-foreground">Say hello! Keep every conversation on Gratis Castle — handovers happen at our pickup hub or through free Gratis Castle delivery — never pay anyone.</p>}
+            )) : <p className="py-10 text-center text-sm text-muted-foreground">Say hello! Keep every conversation on Gratis Castle — handovers happen at our pickup hub or through Gratis Castle delivery — never pay another member.</p>}
             <div ref={bottomRef} />
           </div>
           <form onSubmit={sendMessage} className="border-t border-border p-3 sm:p-4">

@@ -244,8 +244,8 @@ function CollectionOptions({ hubStates }: { hubStates: NgState[] }) {
       <div className="flex gap-3 p-4">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-highlight-soft text-highlight-soft-foreground"><Truck className="size-5" /></span>
         <div className="text-sm">
-          <p className="font-bold">Free delivery</p>
-          <p className="text-muted-foreground">Anywhere in Nigeria. Gratis Castle delivers at no cost — never pay anyone for an item or its delivery.</p>
+          <p className="font-bold">Delivery, paid by you</p>
+          <p className="text-muted-foreground">Anywhere in Nigeria. You cover the delivery cost — we confirm the exact fee on your order before dispatch. Never pay anyone for the item itself.</p>
         </div>
       </div>
     </div>

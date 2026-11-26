@@ -40,8 +40,10 @@ const PHONE_PATTERN = /^(\+?234|0)[789][01]\d{8}$/;
 const normalisePhone = (value: string) => value.replace(/[\s\-().]/g, "");
 
 /**
- * The free checkout. Works like a normal e-commerce checkout — contact details,
- * pickup or delivery, review and agree — except the item and the delivery cost ₦0.
+ * The checkout. Works like a normal e-commerce checkout — contact details, pickup or
+ * delivery, review and agree. The item is always ₦0 and so is collection from a hub.
+ * Delivery is paid by the receiver: Gratis Castle quotes the fee on the order before
+ * dispatch, so nothing is paid here, but the receiver must agree to cover it.
  * There is no approval step: placing the order claims the item. Nigeria only;
  * pickup is offered at Gratis Castle hubs in the member's state.
  */
@@ -61,6 +63,7 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
   const [message, setMessage] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [safetyAcknowledged, setSafetyAcknowledged] = useState(defaults.safetyAcknowledged);
+  const [deliveryFeeAccepted, setDeliveryFeeAccepted] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState<ItemRequest | null>(null);
@@ -93,6 +96,7 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
     if (method === "pickup" && !hubId) found.pickup_location_id = "Please choose a pickup hub.";
     if (method === "delivery" && address.street.trim().length < 10) found.delivery_address = "Please add your full delivery address (house number, street and area).";
     if (method === "delivery" && address.city.trim().length < 2) found.delivery_city = "Please add your city or LGA.";
+    if (method === "delivery" && !deliveryFeeAccepted) found.delivery_fee_accepted = "Please confirm you'll pay the delivery cost, or choose free pickup at a hub.";
     if (!safetyAcknowledged) found.safety_acknowledged = "Please read and acknowledge the safety notice.";
     if (!termsAccepted) found.terms_accepted = "Please accept the terms to place your order.";
     return found;
@@ -126,6 +130,7 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
         introduction: message.trim() || null,
         terms_accepted: termsAccepted,
         safety_acknowledged: safetyAcknowledged,
+        delivery_fee_accepted: method === "delivery" ? deliveryFeeAccepted : null,
       });
       setOrder(response.data);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -145,7 +150,8 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
     return <OrderConfirmation listing={listing} order={order} hubName={hub ? `${hub.name}, ${hub.area}` : null} />;
   }
 
-  const collectionLabel = method === "pickup" ? (hub ? `${hub.name}, ${hub.area}` : "Pickup hub") : method === "delivery" ? "Free delivery" : "Not chosen yet";
+  const collectionLabel = method === "pickup" ? (hub ? `${hub.name}, ${hub.area}` : "Pickup hub") : method === "delivery" ? "Delivery (paid by you)" : "Not chosen yet";
+  const isDelivery = method === "delivery";
   const contactDone = contact.name.trim().length >= 3 && PHONE_PATTERN.test(normalisePhone(contact.phone)) && /^\S+@\S+\.\S+$/.test(contact.email);
   const collectionDone = !!method && (method === "delivery" ? address.street.trim().length >= 10 && address.city.trim().length >= 2 : !!hubId);
 
@@ -156,7 +162,7 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
       </Link>
       <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Checkout</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        The item is free and so is delivery. Once you place your order, it&apos;s yours — no waiting for approval.{" "}
+        The item is free, and so is collecting it from our hub. If you choose delivery, you pay the delivery cost. Once you place your order, it&apos;s yours — no waiting for approval.{" "}
         <span className="font-semibold text-foreground">{remaining} of {defaults.monthlyLimit}</span> free items left for you this month.
       </p>
 
@@ -192,7 +198,7 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
                 <optgroup label="With a Gratis Castle pickup hub">
                   {sortedStates.filter((item) => item.pickup_available).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </optgroup>
-                <optgroup label="Other states — free delivery">
+                <optgroup label="Other states — delivery at your cost">
                   {sortedStates.filter((item) => !item.pickup_available).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </optgroup>
               </Select>
@@ -205,7 +211,8 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
                 onSelect={() => { setMethod("pickup"); setHubId(hubs[0]?.id ?? null); clearError("fulfillment_method"); }}
                 icon={MapPin}
                 title="Pick up at our hub"
-                badge="₦0"
+                badge="Free"
+                badgeTone="free"
                 text={state?.pickup_available ? `Collect from a Gratis Castle hub in ${state.name}.` : state ? `No pickup hub in ${state.name} yet.` : "Choose your state first."}
               />
               <MethodCard
@@ -214,8 +221,9 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
                 onSelect={() => { setMethod("delivery"); clearError("fulfillment_method"); }}
                 icon={Truck}
                 title="Deliver to me"
-                badge="Free"
-                text="Delivered to your address anywhere in Nigeria at no cost."
+                badge="You pay"
+                badgeTone="paid"
+                text="Delivered to your address anywhere in Nigeria. You pay the delivery cost — we confirm the fee before dispatch."
               />
             </div>
             <FieldError message={errors.fulfillment_method} />
@@ -247,9 +255,13 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
                 {state && !state.pickup_available && (
                   <p className="flex gap-2 rounded-xl bg-muted px-3.5 py-3 text-xs text-muted-foreground">
                     <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-                    There&apos;s no Gratis Castle pickup hub in {state.name} yet, so we&apos;ll deliver to you — free of charge.
+                    There&apos;s no Gratis Castle pickup hub in {state.name} yet, so we&apos;ll deliver to you. You pay the delivery cost.
                   </p>
                 )}
+                <p className="flex gap-2 rounded-xl border border-brand-yellow-300 bg-highlight-soft px-3.5 py-3 text-xs text-highlight-soft-foreground">
+                  <Truck className="mt-0.5 size-4 shrink-0" />
+                  <span><strong>Delivery is paid by you.</strong> The fee depends on the item&apos;s size and how far it travels. We&apos;ll show the exact amount on your order page and notify you before dispatch — only ever pay that amount.</span>
+                </p>
                 <Field id="delivery_address" label="Delivery address" error={errors.delivery_address}>
                   <Textarea id="field-delivery_address" value={address.street} onChange={(e) => { setAddress({ ...address, street: e.target.value }); clearError("delivery_address"); }} rows={2} maxLength={500} autoComplete="street-address" placeholder="House number, street and area" aria-invalid={!!errors.delivery_address} className="text-base sm:text-sm" />
                 </Field>
@@ -279,12 +291,17 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
             </div>
           </Step>
 
-          <Step number={4} title="Review and agree" done={termsAccepted && safetyAcknowledged}>
+          <Step number={4} title="Review and agree" done={termsAccepted && safetyAcknowledged && (!isDelivery || deliveryFeeAccepted)}>
             <div className="space-y-3">
+              {isDelivery && (
+                <Agreement id="field-delivery_fee_accepted" checked={deliveryFeeAccepted} onChange={(value) => { setDeliveryFeeAccepted(value); clearError("delivery_fee_accepted"); }} error={errors.delivery_fee_accepted}>
+                  I understand that Gratis Castle does not cover delivery. <strong className="text-foreground">I will pay the delivery cost</strong> shown on my order page before dispatch. The item itself is free.
+                </Agreement>
+              )}
               {!defaults.safetyAcknowledged && <SafetyNotice />}
               {!defaults.safetyAcknowledged && (
                 <Agreement id="field-safety_acknowledged" checked={safetyAcknowledged} onChange={(value) => { setSafetyAcknowledged(value); clearError("safety_acknowledged"); }} error={errors.safety_acknowledged}>
-                  I have read the safety notice. I will never pay anyone to reserve, release or deliver an item.
+                  I have read the safety notice. I will never pay anyone for an item, and I&apos;ll only pay a delivery fee shown on my Gratis Castle order page.
                 </Agreement>
               )}
               <Agreement id="field-terms_accepted" checked={termsAccepted} onChange={(value) => { setTermsAccepted(value); clearError("terms_accepted"); }} error={errors.terms_accepted}>
@@ -302,16 +319,17 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
             <ItemSummary listing={listing} plain className="mt-3" />
             <dl className="mt-5 space-y-2.5 border-t border-border pt-4 text-sm">
               <Row label="Item" value="₦0" />
-              <Row label={method === "pickup" ? "Hub pickup" : "Delivery"} value="₦0" />
+              {isDelivery ? <Row label="Delivery" value="Paid by you" /> : <Row label="Hub pickup" value="Free" />}
               <Row label="Collection" value={collectionLabel} muted />
               <Row label="State" value={state?.name ?? "—"} muted />
             </dl>
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-highlight-soft px-4 py-3 text-highlight-soft-foreground">
-              <span className="text-sm font-semibold">Total</span>
+              <span className="text-sm font-semibold">{isDelivery ? "Due today" : "Total"}</span>
               <span className="text-2xl font-extrabold">₦0</span>
             </div>
+            {isDelivery && <p className="mt-2 text-xs text-muted-foreground">+ delivery fee, paid by you. We confirm the exact amount on your order before dispatch.</p>}
             <Button type="submit" size="lg" className="mt-4 h-13 w-full rounded-xl text-base" disabled={busy}>
-              {busy ? <Loader2 className="size-5 animate-spin" /> : <Receipt className="size-4" />} {busy ? "Placing order…" : "Place free order"}
+              {busy ? <Loader2 className="size-5 animate-spin" /> : <Receipt className="size-4" />} {busy ? "Placing order…" : isDelivery ? "Place order" : "Place free order"}
             </Button>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-success"><ShieldCheck className="size-3.5" /> {NO_HIDDEN_FEE}</p>
           </div>
@@ -322,8 +340,8 @@ export function RequestCheckout({ listing, states, defaults }: { listing: Summar
       <div className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-float backdrop-blur lg:hidden">
         <div className="container-page flex items-center gap-3 py-2.5">
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="text-lg font-extrabold text-primary">Total ₦0</p>
-            <p className="truncate text-xs text-muted-foreground">{collectionLabel} · {NO_HIDDEN_FEE}</p>
+            <p className="text-lg font-extrabold text-primary">{isDelivery ? "₦0 + delivery" : "Total ₦0"}</p>
+            <p className="truncate text-xs text-muted-foreground">{isDelivery ? "Delivery fee paid by you, confirmed before dispatch" : `${collectionLabel} · ${NO_HIDDEN_FEE}`}</p>
           </div>
           <Button type="submit" size="lg" className="h-12 rounded-xl px-5 text-base" disabled={busy}>
             {busy ? <Loader2 className="size-5 animate-spin" /> : <Receipt className="size-4" />} {busy ? "Placing…" : "Place order"}
@@ -385,7 +403,7 @@ function Agreement({ id, checked, onChange, error, children }: { id: string; che
   );
 }
 
-function MethodCard({ selected, disabled, onSelect, icon: Icon, title, badge, text }: { selected: boolean; disabled: boolean; onSelect: () => void; icon: typeof MapPin; title: string; badge: string; text: string }) {
+function MethodCard({ selected, disabled, onSelect, icon: Icon, title, badge, badgeTone, text }: { selected: boolean; disabled: boolean; onSelect: () => void; icon: typeof MapPin; title: string; badge: string; badgeTone: "free" | "paid"; text: string }) {
   return (
     <button
       type="button"
@@ -403,7 +421,7 @@ function MethodCard({ selected, disabled, onSelect, icon: Icon, title, badge, te
         <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2 font-bold">{title} <span className="rounded-md bg-success-soft px-1.5 py-0.5 text-[11px] font-extrabold text-success">{badge}</span></span>
+        <span className="flex items-center justify-between gap-2 font-bold">{title} <span className={cn("rounded-md px-1.5 py-0.5 text-[11px] font-extrabold", badgeTone === "free" ? "bg-success-soft text-success" : "bg-highlight-soft text-highlight-soft-foreground")}>{badge}</span></span>
         <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{text}</span>
       </span>
     </button>
@@ -452,7 +470,7 @@ function OrderConfirmation({ listing, order, hubName }: { listing: Summary; orde
   const next = [
     { title: "Order confirmed", text: `${listing.giverName} has been told the item is yours.`, done: true },
     { title: "Giver hands it to Gratis Castle", text: "They drop it at our hub, or our dispatch rider collects it.", done: false },
-    { title: isPickup ? "Ready for collection" : "Out for delivery", text: isPickup ? `We'll tell you when it's waiting at ${hubName ?? "your hub"}. Bring a valid ID.` : "We deliver it to your address — free of charge.", done: false },
+    { title: isPickup ? "Ready for collection" : "Out for delivery", text: isPickup ? `We'll tell you when it's waiting at ${hubName ?? "your hub"}. Bring a valid ID.` : "We confirm your delivery fee on your order page, then deliver to your address. You pay the delivery cost.", done: false },
     { title: "Confirm you received it", text: "Tap “I've received it” in your orders to complete the handover.", done: false },
   ];
 
@@ -467,8 +485,8 @@ function OrderConfirmation({ listing, order, hubName }: { listing: Summary; orde
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-left text-sm">
           <div className="flex justify-between"><span className="text-muted-foreground">Item</span><span className="font-semibold">₦0</span></div>
-          <div className="mt-1.5 flex justify-between"><span className="text-muted-foreground">{isPickup ? "Hub pickup" : "Delivery"}</span><span className="font-semibold">₦0</span></div>
-          <div className="mt-2 flex justify-between border-t border-border pt-2 font-extrabold"><span>Total paid</span><span>₦0</span></div>
+          <div className="mt-1.5 flex justify-between gap-4"><span className="text-muted-foreground">{isPickup ? "Hub pickup" : "Delivery"}</span><span className="text-right font-semibold">{isPickup ? "Free" : "Paid by you — fee confirmed before dispatch"}</span></div>
+          <div className="mt-2 flex justify-between border-t border-border pt-2 font-extrabold"><span>Paid today</span><span>₦0</span></div>
         </div>
 
         <ol className="mt-6 space-y-3 text-left">
@@ -482,7 +500,7 @@ function OrderConfirmation({ listing, order, hubName }: { listing: Summary; orde
           ))}
         </ol>
 
-        <p className="mt-5 flex items-center justify-center gap-1.5 text-sm font-semibold text-success"><ShieldCheck className="size-4" /> {NO_HIDDEN_FEE} Never pay a rider or anyone else.</p>
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-sm font-semibold text-success"><ShieldCheck className="size-4" /> {isPickup ? `${NO_HIDDEN_FEE} Never pay anyone.` : "Only pay the delivery fee shown on your order — never pay for the item."}</p>
 
         <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
           <Button asChild size="lg"><Link href={`/account/requests?order=${order.id}`}><Receipt className="size-4" /> Track my order</Link></Button>

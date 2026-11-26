@@ -375,7 +375,7 @@ function hubPayload(form: HubForm) {
 
 /**
  * Admin › Pickup hubs. Pickup is offered at checkout only when a state is switched on
- * AND has at least one active hub; everyone else gets free delivery.
+ * AND has at least one active hub; everyone else gets delivery, paid by the receiver.
  */
 export function AdminLocationsPage() {
   const { user } = useSession();
@@ -408,7 +408,7 @@ export function AdminLocationsPage() {
     <div>
       <PageHeader
         title="Pickup hubs"
-        description="Gratis Castle's own premises where givers drop items and receivers collect them. States without an active hub automatically get free delivery at checkout."
+        description="Gratis Castle's own premises where givers drop items and receivers collect them. Collection at a hub is free. States without an active hub automatically get delivery at checkout, paid by the receiver."
         actions={isAdmin && <Button onClick={() => setForm({ ...EMPTY_HUB, state_id: table.filters.state })}><Plus className="size-4" /> Add pickup hub</Button>}
       />
       <LocationTabs active="hubs" />

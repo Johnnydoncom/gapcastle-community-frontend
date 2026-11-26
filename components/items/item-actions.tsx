@@ -127,7 +127,7 @@ export function ItemActions({ listingId, listingSlug, title, status, isRequestab
       </div>
       {canCheckout && (
         <p className="mt-2.5 hidden items-center gap-1.5 text-sm font-semibold text-success sm:flex">
-          <ShieldCheck className="size-4" /> {NO_HIDDEN_FEE} <span className="font-normal text-muted-foreground">Item ₦0 · Delivery ₦0</span>
+          <ShieldCheck className="size-4" /> {NO_HIDDEN_FEE} <span className="font-normal text-muted-foreground">Item ₦0 · Hub pickup ₦0 · Delivery paid by you</span>
         </p>
       )}
 
@@ -151,7 +151,7 @@ export function ItemActions({ listingId, listingSlug, title, status, isRequestab
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <p>
-          Never pay anyone for a free item or its delivery.{" "}
+          Never pay anyone for a free item.{" "}
           <Link href="/safety" className="font-semibold text-primary hover:underline">Safety tips</Link>
         </p>
         {userId && !isOwner && <ReportDialog type="listing" id={listingId} label="Report listing" />}

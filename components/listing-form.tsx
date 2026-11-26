@@ -433,7 +433,7 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
           </div>
         </Section>
 
-        <Section number={6} icon={ShieldCheck} title="How you'll hand it over" hint="You never meet the receiver. Gratis Castle takes it from here — free of charge." error={errors.handover_method} id="field-handover_method">
+        <Section number={6} icon={ShieldCheck} title="How you'll hand it over" hint="You never meet the receiver. Gratis Castle takes it from here." error={errors.handover_method} id="field-handover_method">
           <div role="radiogroup" aria-label="Handover method" className="grid gap-3 sm:grid-cols-2">
             <ChoiceCard
               selected={handover === "hub_dropoff"}
@@ -516,7 +516,7 @@ export function ListingForm({ initial, onSaved }: { initial?: Listing; onSaved: 
             <Button type="button" size="lg" className="mt-4 w-full" disabled={saving || !user?.email_verified} onClick={save}>
               {saving && <Loader2 className="size-4 animate-spin" />} {submitLabel}
             </Button>
-            <p className="mt-2 text-center text-xs text-muted-foreground">100% free · No prices · Free delivery to the receiver</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">100% free · No prices · Free hub pickup for the receiver</p>
           </div>
         </div>
       </aside>
@@ -620,7 +620,7 @@ function ListingPreview({ image, title, categoryName, condition, quantity, descr
         <h3 className="line-clamp-2 font-bold leading-snug">{title || "Your item title"}</h3>
         <p className="text-xs text-muted-foreground">
           {CONDITION_LABELS[condition]}{quantity > 1 && ` · Qty ${quantity}`}
-          <span className="mx-1.5 text-border">•</span>Hub pickup or free delivery
+          <span className="mx-1.5 text-border">•</span>Free hub pickup or paid delivery
         </p>
         {details.length > 0 && (
           <div className="flex flex-wrap gap-1.5">

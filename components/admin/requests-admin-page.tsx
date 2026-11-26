@@ -9,11 +9,12 @@ import { useAllStates } from "@/components/admin/geography-admin";
 import { DataTable, Field, FilterSelect, PageHeader, Pagination, Pill, RowActions, STATUS_TONE, SearchInput, TableCard, Toolbar, errorMessage, useTableState, type PageMeta } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, Textarea } from "@/components/ui/form-fields";
+import { Input, Select, Textarea } from "@/components/ui/form-fields";
 import { api } from "@/lib/api";
 import { REQUEST_STATUS_LABELS, timeAgo } from "@/lib/gapcastle";
 import { listingPath, profilePath } from "@/lib/site";
-import type { FulfillmentStage } from "@/lib/types";
+import type { FulfillmentStage, OrderCharges } from "@/lib/types";
+import { formatNaira } from "@/lib/utils";
 
 type AdminOrder = {
   id: number;
@@ -30,6 +31,7 @@ type AdminOrder = {
   recipient: { name: string | null; email: string | null; phone: string | null; alt_phone: string | null; address: string | null; city: string | null; landmark: string | null; notes: string | null; best_time: string | null } | null;
   state: string | null;
   hub: string | null;
+  charges: OrderCharges;
   received_at: string | null;
   created_at: string;
   claimed_at: string | null;
@@ -48,8 +50,9 @@ const STAGE_TONE: Record<string, "yellow" | "blue" | "green" | "gray"> = {
 /**
  * The orders board. Members never meet, so the Gratis Castle team runs every
  * handover from here: the giver's drop-off or dispatch pickup (with their private
- * address), then hub collection or free delivery to the receiver. Staff move each
- * order through its stages; the receiver is notified at every step.
+ * address), then free hub collection or delivery to the receiver. Delivery is paid by
+ * the receiver: staff quote the fee here before dispatch. Staff move each order
+ * through its stages; the receiver is notified at every step.
  */
 export function AdminRequestsPage() {
   const queryClient = useQueryClient();
@@ -69,7 +72,7 @@ export function AdminRequestsPage() {
 
   return (
     <div>
-      <PageHeader title="Orders" description="Every free order across Nigeria. Run the handover from the giver to the receiver — contact details here are never shown to the other member." />
+      <PageHeader title="Orders" description="Every order across Nigeria — items are free, hub pickup is free, delivery is paid by the receiver. Run the handover from the giver to the receiver — contact details here are never shown to the other member." />
 
       <TableCard>
         <Toolbar>
@@ -121,7 +124,12 @@ export function AdminRequestsPage() {
               <td className="text-xs">
                 <p className="flex items-center gap-1.5 font-medium">
                   {row.fulfillment_method === "pickup" ? <MapPin className="size-3.5 text-primary" /> : <Truck className="size-3.5 text-brand-yellow-700" />}
-                  {row.fulfillment_method === "pickup" ? "Hub collection" : "Free delivery"}
+                  {row.fulfillment_method === "pickup" ? "Hub collection" : "Delivery"}
+                  {row.fulfillment_method === "delivery" && (
+                    <span className={row.charges?.delivery_fee_status === "quoted" ? "text-muted-foreground" : "font-semibold text-brand-yellow-700"}>
+                      · {typeof row.charges?.delivery === "number" ? formatNaira(row.charges.delivery) : "fee not set"}
+                    </span>
+                  )}
                 </p>
                 <p className="max-w-48 truncate text-muted-foreground">{row.fulfillment_method === "pickup" ? row.hub ?? "—" : [row.recipient?.city, row.state].filter(Boolean).join(", ") || "—"}</p>
               </td>
@@ -156,6 +164,8 @@ export function AdminRequestsPage() {
 function ManageOrderDialog({ order, stages, onClose, onSaved }: { order: AdminOrder | null; stages: Page["stages"]; onClose: () => void; onSaved: (order: AdminOrder) => void }) {
   const [stage, setStage] = useState<string>("");
   const [note, setNote] = useState("");
+  const [fee, setFee] = useState("");
+  const [feeNote, setFeeNote] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [openedFor, setOpenedFor] = useState<number | null>(null);
 
@@ -163,14 +173,20 @@ function ManageOrderDialog({ order, stages, onClose, onSaved }: { order: AdminOr
     setOpenedFor(order.id);
     setStage(order.fulfillment_stage ?? "awaiting_handover");
     setNote("");
+    setFee(typeof order.charges?.delivery === "number" ? String(order.charges.delivery) : "");
+    setFeeNote(order.charges?.delivery_fee_note ?? "");
   }
 
   const isPickup = order?.fulfillment_method === "pickup";
   const availableStages = stages.filter((item) => (isPickup ? item.value !== "out_for_delivery" : item.value !== "ready_for_pickup"));
   const inProgress = order?.status === "accepted";
 
-  async function run(action: "stage" | "complete" | "cancel") {
+  async function run(action: "stage" | "delivery_fee" | "complete" | "cancel") {
     if (!order) return;
+    if (action === "delivery_fee" && (fee.trim() === "" || Number.isNaN(Number(fee)) || Number(fee) < 0)) {
+      toast.error("Enter the delivery fee in naira, e.g. 3500.");
+      return;
+    }
     if (action === "cancel" && !confirm(`Cancel order ${order.order_number}? The item becomes available to other members again.`)) return;
     if (action === "complete" && !confirm(`Mark order ${order.order_number} as completed? The item will be marked as given away.`)) return;
     setBusy(action);
@@ -178,10 +194,11 @@ function ManageOrderDialog({ order, stages, onClose, onSaved }: { order: AdminOr
       const response = await api.patch<{ data: AdminOrder; message: string }>(`admin/requests/${order.id}`, {
         action,
         ...(action === "stage" ? { stage } : {}),
-        note: note.trim() || null,
+        ...(action === "delivery_fee" ? { delivery_fee: Number(fee) } : {}),
+        note: (action === "delivery_fee" ? feeNote : note).trim() || null,
       });
       toast.success(response.message);
-      setNote("");
+      if (action !== "delivery_fee") setNote("");
       onSaved(response.data);
     } catch (err) {
       toast.error(errorMessage(err, "Could not update the order"));
@@ -216,7 +233,7 @@ function ManageOrderDialog({ order, stages, onClose, onSaved }: { order: AdminOr
                 {order.giver?.email && <p className="truncate text-xs text-muted-foreground">{order.giver.email}</p>}
               </InfoCard>
 
-              <InfoCard title={isPickup ? "2. Receiver collects at hub" : "2. Deliver to receiver (free)"} icon={isPickup ? MapPin : Truck}>
+              <InfoCard title={isPickup ? "2. Receiver collects at hub (free)" : "2. Deliver to receiver (receiver pays)"} icon={isPickup ? MapPin : Truck}>
                 <p className="font-semibold">{order.recipient?.name ?? order.requester?.name ?? "—"}</p>
                 {order.recipient?.phone && <a href={`tel:${order.recipient.phone}`} className="block font-medium text-primary">{order.recipient.phone}</a>}
                 {order.recipient?.alt_phone && <p className="text-muted-foreground">Alt: {order.recipient.alt_phone}</p>}
@@ -233,6 +250,32 @@ function ManageOrderDialog({ order, stages, onClose, onSaved }: { order: AdminOr
                 {order.recipient?.best_time && <p className="text-muted-foreground">Best time: {order.recipient.best_time}</p>}
               </InfoCard>
             </div>
+
+            {!isPickup && (
+              <div className="space-y-3 rounded-2xl border border-brand-yellow-300 bg-highlight-soft/40 p-4">
+                <p className="text-sm font-semibold">
+                  Delivery fee <span className="font-normal text-muted-foreground">· paid by the receiver ·{" "}
+                    {typeof order.charges?.delivery === "number" ? `quoted ${formatNaira(order.charges.delivery)}${order.charges.delivery_fee_quoted_at ? ` ${timeAgo(order.charges.delivery_fee_quoted_at)}` : ""}` : "not quoted yet"}
+                  </span>
+                </p>
+                {inProgress ? (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-[160px_1fr_auto] sm:items-end">
+                      <Field label="Amount (₦)">
+                        <Input type="number" inputMode="decimal" min={0} step="50" value={fee} onChange={(event) => setFee(event.target.value)} placeholder="e.g. 3500" />
+                      </Field>
+                      <Field label="Note to the receiver (optional)">
+                        <Input value={feeNote} onChange={(event) => setFeeNote(event.target.value)} maxLength={500} placeholder="e.g. Interstate dispatch via GIG, pay on delivery" />
+                      </Field>
+                      <Button onClick={() => run("delivery_fee")} disabled={!!busy}>
+                        {busy === "delivery_fee" && <Loader2 className="size-4 animate-spin" />} {typeof order.charges?.delivery === "number" ? "Update fee" : "Save fee"}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Quote the fee before dispatch. The receiver is notified privately and sees it on their order — it is never shown to the giver.</p>
+                  </>
+                ) : null}
+              </div>
+            )}
 
             {inProgress ? (
               <div className="space-y-3 rounded-2xl border border-border p-4">

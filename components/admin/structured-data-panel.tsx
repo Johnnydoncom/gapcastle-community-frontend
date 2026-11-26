@@ -44,7 +44,7 @@ const TEMPLATES: Array<{ key: string; label: string; site?: boolean; build: () =
       "@context": "https://schema.org",
       "@type": "FAQPage",
       mainEntity: [
-        { "@type": "Question", name: "Is everything on Gratis Castle free?", acceptedAnswer: { "@type": "Answer", text: "Yes. Items and delivery are free — never pay anyone for an item." } },
+        { "@type": "Question", name: "Is everything on Gratis Castle free?", acceptedAnswer: { "@type": "Answer", text: "Every item is free, and so is collection from a Gratis Castle pickup hub. Delivery is paid by the receiver — never pay anyone for an item." } },
       ],
     }),
   },

@@ -148,7 +148,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
             ))}
           </div>
         </details>
-        <p className="text-xs text-muted-foreground">Only general areas are shown. Every handover goes through a Gratis Castle hub or free delivery.</p>
+        <p className="text-xs text-muted-foreground">Only general areas are shown. Every handover goes through a Gratis Castle hub or Gratis Castle delivery.</p>
       </div>
 
       {activeFilters > 0 && (
@@ -217,7 +217,7 @@ export async function ExplorePage({ basePath, filters, title, description, fixed
             <Sparkles className="size-3.5" /> 100% free
           </li>
           <li className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1 text-muted-foreground">
-            <Truck className="size-3.5" /> Hub pickup or free delivery
+            <Truck className="size-3.5" /> Free hub pickup or delivery
           </li>
         </ul>
       </header>

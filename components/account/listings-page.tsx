@@ -238,7 +238,7 @@ function HandoverPanel({ listing, states }: { listing: Listing; states: NgState[
 
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
         <Lock className="mt-0.5 size-3.5 shrink-0" />
-        You never meet the receiver, and their contact details stay private. Never accept or ask for money — Gratis Castle delivers for free.
+        You never meet the receiver, and their contact details stay private. Never accept or ask for money — Gratis Castle handles the handover.
       </p>
     </div>
   );

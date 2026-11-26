@@ -23,7 +23,7 @@ export function HeroAccountCard() {
           <span className="flex size-11 items-center justify-center rounded-full bg-primary-50 text-primary"><UserRound className="size-5" /></span>
           <div className="min-w-0">
             <p className="font-semibold leading-tight">Welcome to Gratis Castle</p>
-            <p className="text-xs text-muted-foreground">Free items, free delivery.</p>
+            <p className="text-xs text-muted-foreground">Free items, free hub pickup.</p>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2">

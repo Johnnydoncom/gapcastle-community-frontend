@@ -309,7 +309,7 @@ function TopBar() {
       <div className="container-page flex h-9 items-center justify-between gap-4 text-xs">
         <p className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 rounded bg-highlight px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-highlight-foreground">100% FREE</span>
-          <span className="truncate">Give or pick an item for free — collect at our pickup hub or get free delivery anywhere in Nigeria.</span>
+          <span className="truncate">Give or pick an item for free — collect free at our pickup hub, or get it delivered anywhere in Nigeria at your cost.</span>
         </p>
         <nav aria-label="Help" className="hidden shrink-0 items-center gap-5 md:flex">
           <Link href="/pickup-hubs" className="inline-flex items-center gap-1.5 hover:text-white"><MapPin className="size-3.5" /> Pickup hub</Link>
@@ -378,8 +378,8 @@ function SiteFooter({ compactOnMobile = false, hubNote, footerAbout, footerLinks
         <div className="container-page grid gap-4 py-6 text-sm sm:grid-cols-3">
           {[
             { icon: Gift, title: "100% free", text: "No prices, no payments for items." },
-            { icon: MapPin, title: "Pickup hub", text: hubNote ?? "Collect from a Gratis Castle pickup hub." },
-            { icon: Truck, title: "Free delivery", text: "We deliver anywhere in Nigeria at no cost." },
+            { icon: MapPin, title: "Free hub pickup", text: hubNote ?? "Collect free from a Gratis Castle pickup hub." },
+            { icon: Truck, title: "Delivery", text: "Anywhere in Nigeria — the receiver pays delivery." },
           ].map((item) => (
             <div key={item.title} className="flex items-center gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-yellow-300"><item.icon className="size-5" /></span>
@@ -423,7 +423,7 @@ function SiteFooter({ compactOnMobile = false, hubNote, footerAbout, footerLinks
       </div>
       <div className="border-t border-white/10">
         <p className="container-page py-5 text-xs text-ink-foreground/60">
-          © <CurrentYear /> Gratis Castle · Serving Nigeria only · Items and delivery are free — never pay anyone for an item.
+          © <CurrentYear /> Gratis Castle · Serving Nigeria only · Items and hub pickup are free; delivery is paid by the receiver. Never pay anyone for an item.
         </p>
       </div>
     </footer>

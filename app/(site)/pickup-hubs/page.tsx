@@ -7,9 +7,9 @@ import { breadcrumbJsonLd } from "@/lib/seo";
 
 const baseMetadata: Metadata = {
   title: "Pickup hubs in Lagos Nigeria — Collect free items",
-  description: "Collect free items from a Gratis Castle pickup hub in Lagos Nigeria — or get them delivered free anywhere else in Nigeria. Safe, free handovers at our managed locations.",
+  description: "Collect free items from a Gratis Castle pickup hub in Lagos Nigeria for free — or have them delivered anywhere else in Nigeria at your cost. Safe handovers at our managed locations.",
   alternates: { canonical: "/pickup-hubs" },
-  keywords: ["pickup hubs Lagos", "collect free items Nigeria", "Gratis Castle pickup locations", "free item collection Lagos", "free delivery Nigeria"],
+  keywords: ["pickup hubs Lagos", "collect free items Nigeria", "Gratis Castle pickup locations", "free item collection Lagos", "item delivery Nigeria"],
 };
 
 /** Built-in metadata, with any overrides saved in Admin › Pages & SEO on top. */

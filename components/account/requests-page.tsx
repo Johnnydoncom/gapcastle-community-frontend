@@ -19,7 +19,7 @@ import { NO_HIDDEN_FEE } from "@/lib/content";
 import { timeAgo } from "@/lib/gapcastle";
 import { listingPath } from "@/lib/site";
 import type { ItemRequest } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatNaira } from "@/lib/utils";
 
 const FILTERS = [
   { value: "open", label: "In progress", match: ["accepted"] },
@@ -106,7 +106,7 @@ export function MyRequestsPage() {
         <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
           <Package className="mx-auto size-8 text-primary" />
           <p className="mt-3 font-semibold">{orders.length ? "No orders here." : "No orders yet"}</p>
-          <p className="mt-1 text-sm text-muted-foreground">Find something useful — the item and delivery are free.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Find something useful — every item is free, and so is collecting it from our hub.</p>
           <Button asChild className="mt-4"><Link href="/explore">Explore free items</Link></Button>
         </div>
       ) : (
@@ -141,6 +141,8 @@ function OrderCard({ order, highlighted, busy, onAct, onReviewed }: {
   const hub = order.pickup_location;
   const recipient = order.recipient;
   const closed = order.status === "cancelled" || order.status === "declined" || order.status === "pending";
+  const deliveryFee = !isPickup && typeof order.totals.delivery === "number" ? order.totals.delivery : null;
+  const totalLabel = isPickup ? "₦0" : deliveryFee !== null ? formatNaira(deliveryFee) : "₦0 + delivery";
 
   return (
     <article id={`order-${order.id}`} className={cn("scroll-mt-32 overflow-hidden rounded-2xl border bg-card shadow-soft", highlighted ? "border-primary ring-2 ring-primary/20" : "border-border")}>
@@ -159,7 +161,7 @@ function OrderCard({ order, highlighted, busy, onAct, onReviewed }: {
             {order.fulfillment_stage_label && order.status === "accepted" && <span className="text-xs font-semibold text-primary">{order.fulfillment_stage_label}</span>}
           </div>
           <Link href={listing ? listingPath(listing.slug) : "/explore"} className="mt-1 line-clamp-2 font-semibold hover:text-primary">{listing?.title ?? "Item"}</Link>
-          <p className="mt-0.5 text-sm text-muted-foreground">Given by {listing?.giver?.name ?? "a member"} · Total <strong className="text-foreground">₦0</strong></p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Given by {listing?.giver?.name ?? "a member"} · Total <strong className="text-foreground">{totalLabel}</strong>{!isPickup && <span className="text-xs"> (item ₦0, delivery paid by you)</span>}</p>
         </div>
       </div>
 
@@ -175,7 +177,7 @@ function OrderCard({ order, highlighted, busy, onAct, onReviewed }: {
           <div className="flex gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary">{isPickup ? <MapPin className="size-4" /> : <Truck className="size-4" />}</span>
             <div className="min-w-0">
-              <p className="font-semibold">{isPickup ? "Collect at our hub" : "Free delivery to you"}</p>
+              <p className="font-semibold">{isPickup ? "Collect free at our hub" : "Delivery to you"}</p>
               {isPickup && hub ? (
                 <>
                   <p className="text-muted-foreground">{hub.name} — {hub.address}, {hub.area}</p>
@@ -188,6 +190,19 @@ function OrderCard({ order, highlighted, busy, onAct, onReviewed }: {
                   {[recipient?.delivery_address, recipient?.delivery_city, order.state?.name].filter(Boolean).join(", ")}
                   {recipient?.delivery_landmark ? ` (near ${recipient.delivery_landmark})` : ""}
                 </p>
+              )}
+              {!isPickup && (
+                <div className="mt-2 rounded-xl border border-brand-yellow-300 bg-highlight-soft px-3 py-2 text-xs text-highlight-soft-foreground">
+                  {deliveryFee !== null ? (
+                    <>
+                      <p><strong>Delivery fee: {formatNaira(deliveryFee)}</strong> — paid by you.</p>
+                      {order.totals.delivery_fee_note && <p className="mt-0.5 opacity-90">{order.totals.delivery_fee_note}</p>}
+                      <p className="mt-0.5 opacity-90">Never pay more than this, and never pay for the item itself.</p>
+                    </>
+                  ) : (
+                    <p><strong>Delivery fee: to be confirmed.</strong> You pay the delivery cost — we&apos;ll show the exact amount here and notify you before dispatch.</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -223,7 +238,7 @@ function OrderCard({ order, highlighted, busy, onAct, onReviewed }: {
         {order.review && (
           <span className="flex items-center gap-1 text-xs text-muted-foreground"><CheckCircle2 className="size-3.5 text-success" /> Reviewed <Star className="size-3 fill-brand-yellow-400 text-brand-yellow-500" /> {order.review.rating}/5</span>
         )}
-        {order.status === "accepted" && <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-success"><ShieldCheck className="size-3.5" /> {NO_HIDDEN_FEE}</span>}
+        {order.status === "accepted" && <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-success"><ShieldCheck className="size-3.5" /> {isPickup ? NO_HIDDEN_FEE : "Item free · only pay the delivery fee shown here"}</span>}
       </footer>
     </article>
   );

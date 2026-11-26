@@ -135,7 +135,7 @@ export function AccountOverviewPage() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="line-clamp-1 block font-semibold">{order.listing?.title ?? "Item"}</span>
-                    <span className="block text-xs text-muted-foreground">{order.order_number} · {order.status === "accepted" ? order.fulfillment_stage_label : order.fulfillment_method === "pickup" ? "Hub pickup" : "Free delivery"}</span>
+                    <span className="block text-xs text-muted-foreground">{order.order_number} · {order.status === "accepted" ? order.fulfillment_stage_label : order.fulfillment_method === "pickup" ? "Hub pickup" : "Delivery"}</span>
                   </span>
                   <RequestStatusBadge status={order.status} />
                 </Link>

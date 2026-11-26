@@ -178,7 +178,7 @@ export function websiteJsonLd() {
     "@id": `${SITE_URL}/#website`,
     name: SITE_NAME,
     url: SITE_URL,
-    description: "Nigeria's free community marketplace. Give or pick an item for free — free delivery across Nigeria.",
+    description: "Nigeria's free community marketplace. Give or pick an item for free — free pickup at our Lagos hub, or delivery across Nigeria at your cost.",
     publisher: { "@id": `${SITE_URL}/#organization` },
     inLanguage: "en-NG",
     potentialAction: {
@@ -425,7 +425,7 @@ export function howItWorksJsonLd() {
         "@type": "HowToStep",
         position: 3,
         name: "Check out and receive",
-        text: "Check out for free — no approval needed. Choose our pickup hub or free delivery and Gratis Castle handles the handover.",
+        text: "Check out for free — no approval needed. Collect free from our pickup hub, or choose delivery (you pay the delivery cost) — Gratis Castle handles the handover.",
       },
     ],
   };

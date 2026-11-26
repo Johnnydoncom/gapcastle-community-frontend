@@ -114,7 +114,7 @@ const HERO_SLIDES: HeroSlide[] = [
     eyebrow: "Free community marketplace",
     title: "Give with kindness.",
     highlight: "Receive with care.",
-    text: "Useful things shared by people across Nigeria. Check out in seconds — the item and delivery cost ₦0.",
+    text: "Useful things shared by people across Nigeria. Check out in seconds — the item costs ₦0.",
     image: "/hero/give-receive.webp",
     imagePosition: "68% center",
     tone: "blue",
@@ -123,10 +123,10 @@ const HERO_SLIDES: HeroSlide[] = [
   },
   {
     key: "delivery",
-    eyebrow: "₦0 delivery · anywhere in Nigeria",
+    eyebrow: "Delivery · anywhere in Nigeria",
     title: "No hub near you?",
-    highlight: "We deliver free.",
-    text: "Collect from our Lagos pickup hub, or choose delivery at checkout and Gratis Castle brings it to your door at no cost.",
+    highlight: "We'll deliver it.",
+    text: "Collect free from our Lagos pickup hub, or choose delivery at checkout and Gratis Castle brings it to your door — you just cover the delivery cost.",
     image: "/hero/free-delivery.webp",
     imagePosition: "58% center",
     tone: "navy",
@@ -243,7 +243,7 @@ async function HubsPromo({ className }: { className?: string }) {
         <p className="mt-1.5 text-lg font-extrabold leading-snug">
           {states.length > 0 ? `Collect in ${formatList(states.map((state) => state.name.replace(" (FCT)", "")))}` : "Collect from a Gratis Castle hub"}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">No hub in your state? We deliver it free.</p>
+        <p className="mt-1 text-sm text-muted-foreground">No hub in your state? Choose delivery at your cost.</p>
       </div>
       <span className="relative mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-primary">Find the hub <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
     </Link>
@@ -253,8 +253,8 @@ async function HubsPromo({ className }: { className?: string }) {
 function ValueStrip() {
   const items = [
     { icon: Sparkles, title: "100% free", text: "No prices" },
-    { icon: MapPin, title: "Pickup hub", text: "Collect from our hub" },
-    { icon: Truck, title: "Free delivery", text: "Anywhere in Nigeria" },
+    { icon: MapPin, title: "Free hub pickup", text: "Collect from our hub" },
+    { icon: Truck, title: "Delivery", text: "Anywhere in Nigeria, at your cost" },
     { icon: ShieldCheck, title: "Private & safe", text: "Addresses stay hidden" },
   ];
 

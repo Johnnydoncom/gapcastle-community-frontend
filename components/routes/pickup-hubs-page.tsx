@@ -18,7 +18,7 @@ export async function PickupHubsPage() {
         <p className="relative text-xs font-bold uppercase tracking-wider text-brand-yellow-300">Collect it yourself</p>
         <h1 className="relative mt-2 text-2xl font-extrabold sm:text-4xl">Gratis Castle pickup hubs</h1>
         <p className="relative mt-3 max-w-xl text-sm text-primary-100 sm:text-base">
-          When you check out an item, choose our hub and collect it there for free. No hub in your state yet? Choose delivery instead — that&apos;s free too.
+          When you check out an item, choose our hub and collect it there for free. No hub in your state yet? Choose delivery instead — you pay only the delivery cost.
         </p>
         {withHubs.length > 0 && (
           <nav aria-label="Jump to state" className="relative mt-5 flex flex-wrap gap-2">
@@ -32,7 +32,7 @@ export async function PickupHubsPage() {
       {withHubs.length === 0 ? (
         <div className="mt-8 rounded-3xl border border-dashed border-border bg-card p-10 text-center">
           <p className="font-semibold">Pickup hubs are opening soon.</p>
-          <p className="mt-1 text-sm text-muted-foreground">You can still get any item and have it delivered free.</p>
+          <p className="mt-1 text-sm text-muted-foreground">You can still get any item and have it delivered — you just cover the delivery cost.</p>
         </div>
       ) : (
         <div className="mt-8 space-y-10">
@@ -58,8 +58,8 @@ export async function PickupHubsPage() {
           <div className="flex items-start gap-3">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-highlight-soft text-highlight-soft-foreground"><Truck className="size-5" /></span>
             <div>
-              <h2 id="waybill-title" className="text-lg font-extrabold">Everywhere else: free delivery</h2>
-              <p className="mt-1 text-sm text-muted-foreground">In these states, choose delivery at checkout. Gratis Castle delivers to you at no cost — never pay anyone for an item or its delivery.</p>
+              <h2 id="waybill-title" className="text-lg font-extrabold">Everywhere else: delivery at your cost</h2>
+              <p className="mt-1 text-sm text-muted-foreground">In these states, choose delivery at checkout. Gratis Castle delivers to you and you pay the delivery cost — we confirm the exact fee on your order before dispatch. Never pay anyone for the item itself, and never pay more than the fee on your order.</p>
             </div>
           </div>
           <ul className="mt-5 flex flex-wrap gap-2">
